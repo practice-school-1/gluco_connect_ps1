@@ -1,0 +1,357 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────
+
+enum Role {
+  patient
+  doctor
+  admin
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum DiabetesType {
+  type_1
+  type_2
+  gestational
+  prediabetes
+}
+
+enum AlertType {
+  high_glucose
+  low_glucose
+  missed_logging
+  high_post_meal
+  medication_due
+}
+
+enum Route {
+  oral
+  subcutaneous
+  intravenous
+  topical
+  inhaled
+}
+
+enum ActivitySource {
+  manual
+  fitbit
+  apple_health
+  google_fit
+}
+
+enum Intensity {
+  light
+  moderate
+  vigorous
+}
+
+enum ReadingType {
+  fasting
+  pre_meal
+  post_meal
+  random
+  bedtime
+}
+
+enum ReadingSource {
+  manual
+  cgm
+  glucometer
+}
+
+enum MealType {
+  breakfast
+  lunch
+  dinner
+  snack
+}
+
+// ──────────────────────────────────────────────
+// Core user / auth
+// ──────────────────────────────────────────────
+
+model User {
+  id                String   @id @default(uuid())
+  phone             String?  @unique
+  email             String?  @unique
+  password_hash     String?
+  role              Role     @default(patient)
+  is_phone_verified Boolean  @default(false)
+  is_active         Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  doctor_profile           Doctor?
+  patient_profile          Patient?
+  device_tokens            DeviceToken[]
+  notification_preferences NotificationPreferences?
+}
+
+model OtpVerification {
+  id         String   @id @default(uuid())
+  phone      String
+  otp_hash   String
+  expires_at DateTime
+  is_used    Boolean  @default(false)
+  created_at DateTime @default(now())
+}
+
+// ──────────────────────────────────────────────
+// Profiles
+// ──────────────────────────────────────────────
+
+model Doctor {
+  id                  String   @id @default(uuid())
+  user_id             String   @unique
+  full_name           String
+  license_number      String   @unique
+  specialty           String?
+  clinic_name         String?
+  years_of_experience Int?
+  invite_code         String   @unique @default(uuid())
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  user        User         @relation(fields: [user_id], references: [id])
+  patients    Patient[]
+  alerts      Alert[]
+  notes       DoctorNote[]
+  medications Medication[]
+}
+
+model Patient {
+  id                      String        @id @default(uuid())
+  user_id                 String        @unique
+  full_name               String
+  date_of_birth           DateTime
+  gender                  Gender?
+  diabetes_type           DiabetesType?
+  doctor_id               String?
+  target_glucose_min      Int?          @default(70)
+  target_glucose_max      Int?          @default(140)
+  emergency_contact_phone String?
+  height_cm               Float?
+  weight_kg               Float?
+  created_at              DateTime      @default(now())
+  updated_at              DateTime      @updatedAt
+
+  user   User    @relation(fields: [user_id], references: [id])
+  doctor Doctor? @relation(fields: [doctor_id], references: [id])
+
+  glucose_readings     GlucoseReading[]
+  meals                Meal[]
+  activities           Activity[]
+  alerts               Alert[]
+  insights             Insight[]
+  medications          Medication[]
+  medication_logs      MedicationLog[]
+  doctor_notes         DoctorNote[]
+  patient_integrations PatientIntegration[]
+}
+
+// ──────────────────────────────────────────────
+// Health tracking
+// ──────────────────────────────────────────────
+
+model GlucoseReading {
+  id           String        @id @default(uuid())
+  patient_id   String
+  value_mg_dl  Float
+  reading_type ReadingType   @default(random)
+  meal_id      String?
+  source       ReadingSource @default(manual)
+  device_id    String?
+  notes        String?
+  recorded_at  DateTime      @default(now())
+  created_at   DateTime      @default(now())
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+  meal    Meal?   @relation(fields: [meal_id], references: [id])
+}
+
+model Meal {
+  id               String   @id @default(uuid())
+  patient_id       String
+  meal_type        MealType
+  photo_url        String?
+  notes            String?
+  logged_at        DateTime @default(now())
+  total_carbs_grams Float?
+  total_calories   Float?
+  created_at       DateTime @default(now())
+
+  patient          Patient          @relation(fields: [patient_id], references: [id])
+  meal_items       MealItem[]
+  glucose_readings GlucoseReading[]
+}
+
+model MealItem {
+  id            String  @id @default(uuid())
+  meal_id       String
+  name          String
+  quantity      String?
+  carbs_grams   Float?
+  calories      Float?
+  glycemic_index String?
+  is_regional   Boolean @default(false)
+
+  meal Meal @relation(fields: [meal_id], references: [id])
+}
+
+model Activity {
+  id              String         @id @default(uuid())
+  patient_id      String
+  source          ActivitySource @default(manual)
+  activity_type   String?
+  steps           Int?
+  active_minutes  Int?
+  calories_burned Float?
+  distance_km     Float?
+  heart_rate_avg  Int?
+  heart_rate_max  Int?
+  intensity       Intensity?
+  notes           String?
+  started_at      DateTime?
+  ended_at        DateTime?
+  date            DateTime
+  created_at      DateTime       @default(now())
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+}
+
+// ──────────────────────────────────────────────
+// Clinical care
+// ──────────────────────────────────────────────
+
+model Alert {
+  id            String    @id @default(uuid())
+  patient_id    String
+  doctor_id     String?
+  type          AlertType
+  trigger_value Float?
+  message       String?
+  is_resolved   Boolean   @default(false)
+  resolved_at   DateTime?
+  created_at    DateTime  @default(now())
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+  doctor  Doctor? @relation(fields: [doctor_id], references: [id])
+}
+
+model Insight {
+  id             String    @id @default(uuid())
+  patient_id     String
+  type           String
+  flag           String?
+  content        String?
+  message        String?
+  recommendation String?
+  generated_by   String?
+  dismissed_at   DateTime?
+  created_at     DateTime  @default(now())
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+}
+
+model Medication {
+  id            String    @id @default(uuid())
+  patient_id    String
+  doctor_id     String?
+  prescribed_by String?
+  name          String
+  dosage     String?
+  frequency  String?
+  route      Route     @default(oral)
+  start_date DateTime
+  end_date   DateTime?
+  is_active  Boolean   @default(true)
+  notes      String?
+  created_at DateTime  @default(now())
+
+  patient Patient         @relation(fields: [patient_id], references: [id])
+  doctor  Doctor?         @relation(fields: [doctor_id], references: [id])
+  logs    MedicationLog[]
+}
+
+model MedicationLog {
+  id            String    @id @default(uuid())
+  medication_id String
+  patient_id    String
+  taken_at      DateTime  @default(now())
+  skipped       Boolean   @default(false)
+  skip_reason   String?
+  notes         String?
+  created_at    DateTime  @default(now())
+
+  medication Medication @relation(fields: [medication_id], references: [id])
+  patient    Patient    @relation(fields: [patient_id], references: [id])
+}
+
+model DoctorNote {
+  id                    String   @id @default(uuid())
+  doctor_id             String
+  patient_id            String
+  note_type             String   @default("general")
+  content               String
+  is_visible_to_patient Boolean  @default(false)
+  created_at            DateTime @default(now())
+
+  doctor  Doctor  @relation(fields: [doctor_id], references: [id])
+  patient Patient @relation(fields: [patient_id], references: [id])
+}
+
+// ──────────────────────────────────────────────
+// Integrations & notifications
+// ──────────────────────────────────────────────
+
+model PatientIntegration {
+  id            String    @id @default(uuid())
+  patient_id    String
+  provider_name String
+  access_token  String
+  refresh_token String?
+  scopes        String?
+  connected_at  DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  patient Patient @relation(fields: [patient_id], references: [id])
+
+  @@unique([patient_id, provider_name])
+}
+
+model DeviceToken {
+  id          String   @id @default(uuid())
+  user_id     String
+  fcm_token   String   @unique
+  device_type String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+model NotificationPreferences {
+  id                 String  @id @default(uuid())
+  user_id            String  @unique
+  glucose_alerts     Boolean @default(true)
+  meal_reminders     Boolean @default(true)
+  activity_reminders Boolean @default(true)
+  doctor_messages    Boolean @default(true)
+
+  user User @relation(fields: [user_id], references: [id])
+}

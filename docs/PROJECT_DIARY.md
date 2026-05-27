@@ -4,7 +4,7 @@ Use this document to log major milestones, architectural decisions, and signific
 
 ---
 ### Date: 2026-05-26
-**Author:** lazy-toad
+**Author:** vraj
 
 * **What was done:** * Initialized the monorepo structure.
   * Added root `.gitignore` and `README.md`.
