@@ -1,0 +1,225 @@
+{
+  "info": {
+    "name": "GlucoConnect API",
+    "description": "Postman Collection for all GlucoConnect APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "PASTE_YOUR_JWT_HERE",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phone\": \"+919876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/send-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "send-otp"]
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phone\": \"+919876543210\",\n    \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-otp"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Health Tracking",
+      "item": [
+        {
+          "name": "Log Glucose",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"value_mg_dl\": 120,\n    \"reading_type\": \"fasting\",\n    \"recorded_at\": \"2023-10-01T08:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/glucose",
+              "host": ["{{base_url}}"],
+              "path": ["glucose"]
+            }
+          }
+        },
+        {
+          "name": "Get Glucose",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/glucose?date=2023-10-01",
+              "host": ["{{base_url}}"],
+              "path": ["glucose"],
+              "query": [
+                { "key": "date", "value": "2023-10-01" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Log Meal",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"meal_type\": \"lunch\",\n    \"logged_at\": \"2023-10-01T13:00:00Z\",\n    \"meal_items\": [\n        { \"name\": \"Rice\", \"carbs_grams\": 40 }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/meals",
+              "host": ["{{base_url}}"],
+              "path": ["meals"]
+            }
+          }
+        },
+        {
+          "name": "Get Meals",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/meals?date=2023-10-01",
+              "host": ["{{base_url}}"],
+              "path": ["meals"],
+              "query": [
+                { "key": "date", "value": "2023-10-01" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Log Activity",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"activity_type\": \"walking\",\n    \"steps\": 5000,\n    \"active_minutes\": 45,\n    \"started_at\": \"2023-10-01T07:00:00Z\",\n    \"date\": \"2023-10-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/activities",
+              "host": ["{{base_url}}"],
+              "path": ["activities"]
+            }
+          }
+        },
+        {
+          "name": "Get Activities",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/activities?date=2023-10-01",
+              "host": ["{{base_url}}"],
+              "path": ["activities"],
+              "query": [
+                { "key": "date", "value": "2023-10-01" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Aggregation & Reports",
+      "item": [
+        {
+          "name": "Daily Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/summary/daily?date=2023-10-01",
+              "host": ["{{base_url}}"],
+              "path": ["summary", "daily"],
+              "query": [
+                { "key": "date", "value": "2023-10-01" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Weekly Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/summary/weekly",
+              "host": ["{{base_url}}"],
+              "path": ["summary", "weekly"]
+            }
+          }
+        },
+        {
+          "name": "Weekly Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/weekly",
+              "host": ["{{base_url}}"],
+              "path": ["reports", "weekly"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
