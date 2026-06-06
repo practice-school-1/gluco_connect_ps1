@@ -1,0 +1,153 @@
+{
+  "_description": "Maps raw Fitbit API response fields to the normalized MongoDB Activity document structure. Each section shows the Fitbit endpoint, its raw response shape, and how each field maps to our Activity schema.",
+
+  "steps": {
+    "fitbit_endpoint": "GET /1/user/-/activities/date/{date}.json",
+    "raw_fitbit_response": {
+      "activities": [],
+      "goals": {
+        "activeMinutes": 30,
+        "caloriesOut": 2500,
+        "distance": 8.05,
+        "floors": 10,
+        "steps": 10000
+      },
+      "summary": {
+        "activityCalories": 1200,
+        "caloriesBMR": 1600,
+        "caloriesOut": 2800,
+        "distances": [
+          { "activity": "total", "distance": 8.5 },
+          { "activity": "tracker", "distance": 8.5 }
+        ],
+        "elevation": 30.48,
+        "fairlyActiveMinutes": 25,
+        "floors": 10,
+        "lightlyActiveMinutes": 180,
+        "marginalCalories": 600,
+        "sedentaryMinutes": 700,
+        "steps": 12450,
+        "veryActiveMinutes": 45
+      }
+    },
+    "mongodb_mapping": {
+      "activity.steps": "raw.summary.steps"
+    },
+    "notes": "We extract only the total step count from the summary. The full raw response is preserved in rawFitbitData.activities for future use."
+  },
+
+  "heartRate": {
+    "fitbit_endpoint": "GET /1/user/-/activities/heart/date/{date}/1d.json",
+    "raw_fitbit_response": {
+      "activities-heart": [
+        {
+          "dateTime": "2026-06-01",
+          "value": {
+            "customHeartRateZones": [],
+            "heartRateZones": [
+              { "caloriesOut": 800, "max": 94, "min": 30, "minutes": 600, "name": "Out of Range" },
+              { "caloriesOut": 300, "max": 132, "min": 94, "minutes": 45, "name": "Fat Burn" },
+              { "caloriesOut": 200, "max": 160, "min": 132, "minutes": 20, "name": "Cardio" },
+              { "caloriesOut": 100, "max": 220, "min": 160, "minutes": 5, "name": "Peak" }
+            ],
+            "restingHeartRate": 58
+          }
+        }
+      ]
+    },
+    "mongodb_mapping": {
+      "activity.heartRate.restingHR": "raw['activities-heart'][0].value.restingHeartRate",
+      "activity.heartRate.zones[].name": "raw['activities-heart'][0].value.heartRateZones[].name",
+      "activity.heartRate.zones[].minutes": "raw['activities-heart'][0].value.heartRateZones[].minutes",
+      "activity.heartRate.zones[].min": "raw['activities-heart'][0].value.heartRateZones[].min",
+      "activity.heartRate.zones[].max": "raw['activities-heart'][0].value.heartRateZones[].max"
+    },
+    "notes": "The caloriesOut field from each zone is intentionally dropped during normalization. The full raw response is preserved in rawFitbitData.heartRate."
+  },
+
+  "sleep": {
+    "fitbit_endpoint": "GET /1.2/user/-/sleep/date/{date}.json",
+    "raw_fitbit_response": {
+      "sleep": [
+        {
+          "dateOfSleep": "2026-06-01",
+          "duration": 28800000,
+          "efficiency": 92,
+          "isMainSleep": true,
+          "levels": {
+            "data": [
+              { "dateTime": "2026-06-01T22:30:00.000", "level": "light", "seconds": 1800 }
+            ],
+            "summary": {
+              "deep": { "count": 4, "minutes": 80, "thirtyDayAvgMinutes": 75 },
+              "light": { "count": 20, "minutes": 200, "thirtyDayAvgMinutes": 210 },
+              "rem": { "count": 6, "minutes": 100, "thirtyDayAvgMinutes": 95 },
+              "wake": { "count": 15, "minutes": 40, "thirtyDayAvgMinutes": 50 }
+            }
+          },
+          "logId": 12345678901,
+          "minutesAfterWakeup": 5,
+          "minutesAsleep": 420,
+          "minutesAwake": 60,
+          "minutesToFallAsleep": 0,
+          "startTime": "2026-06-01T22:30:00.000",
+          "timeInBed": 480,
+          "type": "stages"
+        }
+      ],
+      "summary": {
+        "stages": {
+          "deep": 80,
+          "light": 200,
+          "rem": 100,
+          "wake": 40
+        },
+        "totalMinutesAsleep": 420,
+        "totalSleepRecords": 1,
+        "totalTimeInBed": 480
+      }
+    },
+    "mongodb_mapping": {
+      "activity.sleep.totalMinutes": "raw.summary.totalMinutesAsleep",
+      "activity.sleep.efficiency": "raw.sleep[0].efficiency",
+      "activity.sleep.stages.deep": "raw.summary.stages.deep",
+      "activity.sleep.stages.light": "raw.summary.stages.light",
+      "activity.sleep.stages.rem": "raw.summary.stages.rem",
+      "activity.sleep.stages.wake": "raw.summary.stages.wake"
+    },
+    "notes": "We use the summary-level stage data (total minutes per stage across all sleep logs). Efficiency comes from the primary sleep log (isMainSleep: true). The full raw response is preserved in rawFitbitData.sleep."
+  },
+
+  "combined_normalized_document": {
+    "_description": "This is the final shape of an Activity document stored in MongoDB after normalization.",
+    "example": {
+      "_id": "665c2a1b3f4e5d6a7b8c9d0e",
+      "patientId": "665c2a1b3f4e5d6a7b8c9d01",
+      "date": "2026-06-01",
+      "steps": 12450,
+      "heartRate": {
+        "restingHR": 58,
+        "zones": [
+          { "name": "Out of Range", "minutes": 600, "min": 30, "max": 94 },
+          { "name": "Fat Burn", "minutes": 45, "min": 94, "max": 132 },
+          { "name": "Cardio", "minutes": 20, "min": 132, "max": 160 },
+          { "name": "Peak", "minutes": 5, "min": 160, "max": 220 }
+        ]
+      },
+      "sleep": {
+        "totalMinutes": 420,
+        "efficiency": 92,
+        "stages": {
+          "deep": 80,
+          "light": 200,
+          "rem": 100,
+          "wake": 40
+        }
+      },
+      "rawFitbitData": { "_comment": "Full raw responses stored here for debugging" },
+      "syncedAt": "2026-06-01T10:30:00.000Z",
+      "createdAt": "2026-06-01T10:30:00.000Z",
+      "updatedAt": "2026-06-01T10:30:00.000Z"
+    }
+  }
+}

@@ -1,0 +1,162 @@
+[
+  {
+    "name": "White Rice (Basmati)",
+    "category": "grain",
+    "carbsPerServing": 45,
+    "glycemicIndex": 73,
+    "servingSize": "1 cup (158g)",
+    "tags": ["staple", "high-gi", "gluten-free"]
+  },
+  {
+    "name": "Brown Rice",
+    "category": "grain",
+    "carbsPerServing": 45,
+    "glycemicIndex": 68,
+    "servingSize": "1 cup (195g)",
+    "tags": ["staple", "medium-gi", "gluten-free", "high-fiber"]
+  },
+  {
+    "name": "Wheat Roti / Chapati",
+    "category": "grain",
+    "carbsPerServing": 22,
+    "glycemicIndex": 62,
+    "servingSize": "1 medium (40g)",
+    "tags": ["staple", "medium-gi"]
+  },
+  {
+    "name": "Naan (Refined Flour)",
+    "category": "grain",
+    "carbsPerServing": 45,
+    "glycemicIndex": 71,
+    "servingSize": "1 piece (90g)",
+    "tags": ["high-gi", "refined-carb"]
+  },
+  {
+    "name": "Toor Dal (Pigeon Pea)",
+    "category": "legume",
+    "carbsPerServing": 22,
+    "glycemicIndex": 29,
+    "servingSize": "1 cup cooked (200g)",
+    "tags": ["low-gi", "high-protein", "vegetarian", "staple"]
+  },
+  {
+    "name": "Chana Masala (Chickpeas)",
+    "category": "legume",
+    "carbsPerServing": 45,
+    "glycemicIndex": 33,
+    "servingSize": "1 cup (240g)",
+    "tags": ["low-gi", "high-protein", "vegetarian", "high-fiber"]
+  },
+  {
+    "name": "Idli (Rice & Urad Dal)",
+    "category": "grain",
+    "carbsPerServing": 18,
+    "glycemicIndex": 70,
+    "servingSize": "2 pieces (120g)",
+    "tags": ["fermented", "high-gi", "staple", "gluten-free"]
+  },
+  {
+    "name": "Plain Dosa",
+    "category": "grain",
+    "carbsPerServing": 35,
+    "glycemicIndex": 77,
+    "servingSize": "1 medium (120g)",
+    "tags": ["fermented", "high-gi", "staple", "gluten-free"]
+  },
+  {
+    "name": "Upma (Semolina)",
+    "category": "grain",
+    "carbsPerServing": 30,
+    "glycemicIndex": 68,
+    "servingSize": "1 cup (150g)",
+    "tags": ["medium-gi", "breakfast"]
+  },
+  {
+    "name": "Poha (Flattened Rice)",
+    "category": "grain",
+    "carbsPerServing": 40,
+    "glycemicIndex": 65,
+    "servingSize": "1 cup (150g)",
+    "tags": ["medium-gi", "breakfast", "gluten-free"]
+  },
+  {
+    "name": "Paneer Butter Masala",
+    "category": "dairy",
+    "carbsPerServing": 12,
+    "glycemicIndex": 35,
+    "servingSize": "1 cup (240g)",
+    "tags": ["low-gi", "high-protein", "high-fat", "vegetarian"]
+  },
+  {
+    "name": "Palak Paneer",
+    "category": "vegetable",
+    "carbsPerServing": 10,
+    "glycemicIndex": 25,
+    "servingSize": "1 cup (240g)",
+    "tags": ["low-gi", "high-protein", "high-fiber", "vegetarian"]
+  },
+  {
+    "name": "Chicken Biryani",
+    "category": "grain",
+    "carbsPerServing": 55,
+    "glycemicIndex": 65,
+    "servingSize": "1 cup (250g)",
+    "tags": ["medium-gi", "high-protein", "non-vegetarian"]
+  },
+  {
+    "name": "Chicken Tikka Masala",
+    "category": "protein",
+    "carbsPerServing": 15,
+    "glycemicIndex": 30,
+    "servingSize": "1 cup (240g)",
+    "tags": ["low-gi", "high-protein", "non-vegetarian", "high-fat"]
+  },
+  {
+    "name": "Aloo Gobi (Potato & Cauliflower)",
+    "category": "vegetable",
+    "carbsPerServing": 25,
+    "glycemicIndex": 55,
+    "servingSize": "1 cup (200g)",
+    "tags": ["low-gi", "vegetarian"]
+  },
+  {
+    "name": "Bhindi Masala (Okra)",
+    "category": "vegetable",
+    "carbsPerServing": 12,
+    "glycemicIndex": 20,
+    "servingSize": "1 cup (150g)",
+    "tags": ["low-gi", "vegetarian", "high-fiber"]
+  },
+  {
+    "name": "Samosa",
+    "category": "snack",
+    "carbsPerServing": 24,
+    "glycemicIndex": 60,
+    "servingSize": "1 piece (80g)",
+    "tags": ["fried", "medium-gi", "snack"]
+  },
+  {
+    "name": "Gulab Jamun",
+    "category": "sweet",
+    "carbsPerServing": 35,
+    "glycemicIndex": 80,
+    "servingSize": "2 pieces (100g)",
+    "tags": ["high-gi", "sweet", "refined-sugar"]
+  },
+  {
+    "name": "Raita (Cucumber/Onion)",
+    "category": "dairy",
+    "carbsPerServing": 8,
+    "glycemicIndex": 15,
+    "servingSize": "1/2 cup (120g)",
+    "tags": ["low-gi", "probiotic", "vegetarian"]
+  },
+  {
+    "name": "Masala Chai (with Milk & Sugar)",
+    "category": "beverage",
+    "carbsPerServing": 15,
+    "glycemicIndex": 50,
+    "servingSize": "1 cup (150ml)",
+    "tags": ["low-gi", "beverage", "caffeine"]
+  }
+]

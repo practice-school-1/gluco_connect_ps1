@@ -1,0 +1,107 @@
+[
+  {
+    "name": "EatFit",
+    "city": "Bangalore",
+    "lat": 12.9716,
+    "lng": 77.5946,
+    "rating": 4.5
+  },
+  {
+    "name": "Smoor Chocolates & Healthy Bites",
+    "city": "Bangalore",
+    "lat": 12.9352,
+    "lng": 77.6245,
+    "rating": 4.6
+  },
+  {
+    "name": "FreshMenu Healthy Bowls",
+    "city": "Bangalore",
+    "lat": 12.9250,
+    "lng": 77.5938,
+    "rating": 4.3
+  },
+  {
+    "name": "Salad Days",
+    "city": "Delhi",
+    "lat": 28.6139,
+    "lng": 77.2090,
+    "rating": 4.7
+  },
+  {
+    "name": "Pita Pit",
+    "city": "Delhi",
+    "lat": 28.5355,
+    "lng": 77.1568,
+    "rating": 4.4
+  },
+  {
+    "name": "Subway (Healthy Options)",
+    "city": "Delhi",
+    "lat": 28.6448,
+    "lng": 77.2167,
+    "rating": 4.1
+  },
+  {
+    "name": "Earthen Oven (Healthy Grills)",
+    "city": "Mumbai",
+    "lat": 19.0760,
+    "lng": 72.8777,
+    "rating": 4.3
+  },
+  {
+    "name": "Gostana",
+    "city": "Mumbai",
+    "lat": 19.0607,
+    "lng": 72.8362,
+    "rating": 4.5
+  },
+  {
+    "name": "Kitchen Garden by Suzette",
+    "city": "Mumbai",
+    "lat": 19.0600,
+    "lng": 72.8300,
+    "rating": 4.8
+  },
+  {
+    "name": "Bombay Salad Co.",
+    "city": "Mumbai",
+    "lat": 19.0619,
+    "lng": 72.8347,
+    "rating": 4.7
+  },
+  {
+    "name": "Healthy Roots",
+    "city": "Chennai",
+    "lat": 13.0827,
+    "lng": 80.2707,
+    "rating": 4.2
+  },
+  {
+    "name": "Fruitbae",
+    "city": "Chennai",
+    "lat": 13.0450,
+    "lng": 80.2400,
+    "rating": 4.4
+  },
+  {
+    "name": "The Salad Bar",
+    "city": "Pune",
+    "lat": 18.5204,
+    "lng": 73.8567,
+    "rating": 4.5
+  },
+  {
+    "name": "Healthy Habits",
+    "city": "Pune",
+    "lat": 18.5590,
+    "lng": 73.7868,
+    "rating": 4.3
+  },
+  {
+    "name": "Protein Bake Shop",
+    "city": "Hyderabad",
+    "lat": 17.3850,
+    "lng": 78.4867,
+    "rating": 4.6
+  }
+]
