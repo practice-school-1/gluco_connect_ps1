@@ -1,0 +1,138 @@
+[
+  {
+    "id": "CRITICAL_HYPOGLYCEMIA",
+    "description": "Glucose < 70 mg/dL represents immediate hypoglycemia risk.",
+    "severity": "critical",
+    "clinicalAction": "Consume 15g fast-acting carbohydrates immediately (e.g., half a cup of fruit juice, 3-4 teaspoons of sugar/honey). Recheck blood sugar in 15 minutes. Contact your care provider.",
+    "patientMessageTemplate": "⚠️ Low Sugar Alert: Your glucose is low at {value} mg/dL. Please eat 3 teaspoons of sugar or half a cup of juice immediately and rest.",
+    "enabled": true
+  },
+  {
+    "id": "CRITICAL_HYPERGLYCEMIA",
+    "description": "Glucose > 300 mg/dL represents acute hyperglycemic crisis risk.",
+    "severity": "critical",
+    "clinicalAction": "Contact doctor or emergency services immediately. Check for urine ketones. Avoid physical activity.",
+    "patientMessageTemplate": "⚠️ Critical High Alert: Your glucose is very high at {value} mg/dL. Please contact your doctor immediately and avoid physical exertion.",
+    "enabled": true
+  },
+  {
+    "id": "FASTING_HIGH_TREND",
+    "description": "Fasting glucose is above type-specific target limits for 3 consecutive fasting logs.",
+    "severity": "high",
+    "clinicalAction": "Review bedtime snack composition and check medication adherence. Recommend consulting endocrinologist for potential dosage adjustments.",
+    "patientMessageTemplate": "We noticed your fasting glucose has been high for 3 consecutive days. This trend can indicate a need to adjust your evening meals or medication. Please share this log with your doctor.",
+    "enabled": true
+  },
+  {
+    "id": "FASTING_HYPERGLYCEMIA",
+    "description": "Fasting glucose is above the maximum target for the patient's diabetes type.",
+    "severity": "high",
+    "clinicalAction": "Schedule HbA1c test and review medication/basal insulin with doctor.",
+    "patientMessageTemplate": "Your fasting glucose is elevated. Avoid heavy carbohydrate meals late in the evening and discuss this trend with your care team.",
+    "enabled": true
+  },
+  {
+    "id": "POST_MEAL_SPIKE",
+    "description": "Post-meal glucose is above type-specific targets, representing elevated post-prandial glucose.",
+    "severity": "medium",
+    "clinicalAction": "Review portion sizes of carbohydrates (rice, roti). Walk for 15-20 minutes post-meal.",
+    "patientMessageTemplate": "Your blood sugar rose to {value} mg/dL after your meal. A quick 15-minute walk now will help lower this spike naturally!",
+    "enabled": true
+  },
+  {
+    "id": "CONSISTENT_NORMAL_REINFORCEMENT",
+    "description": "Three consecutive normal readings (between 70 and 140 mg/dL).",
+    "severity": "low",
+    "clinicalAction": "Continue positive habits. Reinforce patient compliance.",
+    "patientMessageTemplate": "Fantastic job! Your last 3 readings have all been within your target range. Consistency is the key to managing your diabetes.",
+    "enabled": true
+  },
+  {
+    "id": "LOW_ACTIVITY_NUDGE",
+    "description": "Glucose > 140 mg/dL with low physical activity level.",
+    "severity": "low",
+    "clinicalAction": "Recommend light aerobic activity (walking) to enhance insulin sensitivity.",
+    "patientMessageTemplate": "Your blood sugar is {value} mg/dL and your activity level is low. Moving around for just 10-15 minutes can significantly improve your body's glucose response.",
+    "enabled": true
+  },
+  {
+    "id": "HIGH_GLYCEMIC_LOAD_MEAL",
+    "description": "Meal likely has high glycemic impact based on content analysis.",
+    "severity": "medium",
+    "clinicalAction": "Review meal composition and portion size.",
+    "patientMessageTemplate": "Your recent meal may have contributed significantly to your glucose increase.",
+    "enabled": true
+  },
+  {
+    "id": "OPTIMAL_FASTING",
+    "description": "Fasting glucose between 70 and 100 mg/dL is optimal.",
+    "severity": "low",
+    "clinicalAction": "Continue current diet, activity, and medication plan.",
+    "patientMessageTemplate": "Excellent fasting glucose of {value} mg/dL! You are starting your day in the target zone. Keep up the great work.",
+    "enabled": true
+  },
+  {
+    "id": "OPTIMAL_POST_MEAL",
+    "description": "Post-meal glucose between 70 and 140 mg/dL is optimal.",
+    "severity": "low",
+    "clinicalAction": "Maintain current meal planning and post-meal activity levels.",
+    "patientMessageTemplate": "Great post-meal glucose of {value} mg/dL! Your body processed this meal beautifully. Keep logging your meals.",
+    "enabled": true
+  },
+  {
+    "id": "RANDOM_ELEVATED",
+    "description": "Random glucose between 140 and 200 mg/dL is slightly elevated.",
+    "severity": "low",
+    "clinicalAction": "Monitor food intake, stay active, and review trends over the next 2 days.",
+    "patientMessageTemplate": "Your glucose reading is slightly elevated at {value} mg/dL. Try drinking some water and doing a light stretch or walk.",
+    "enabled": true
+  },
+  {
+    "id": "GLUCOSE_VARIABILITY_RISK",
+    "description": "High glycemic variability detected using statistical Coefficient of Variation (>36%), indicating unstable glucose control.",
+    "severity": "high",
+    "clinicalAction": "Review glucose logs and medication adherence.",
+    "patientMessageTemplate": "Your glucose levels have been fluctuating significantly. Consider discussing your recent diet and medication schedule with your doctor.",
+    "enabled": true
+  },
+  {
+    "id": "RAPID_GLUCOSE_RISE",
+    "description": "Glucose is increasing rapidly over a short period.",
+    "severity": "high",
+    "clinicalAction": "Monitor glucose closely and review recent meals.",
+    "patientMessageTemplate": "Your glucose is rising rapidly. Stay hydrated and monitor your readings closely.",
+    "enabled": true
+  },
+  {
+    "id": "RAPID_GLUCOSE_DROP",
+    "description": "Glucose is decreasing rapidly and may lead to hypoglycemia.",
+    "severity": "high",
+    "clinicalAction": "Consider checking glucose more frequently and keeping fast-acting carbohydrates available.",
+    "patientMessageTemplate": "Your glucose is dropping quickly. Please monitor closely.",
+    "enabled": true
+  },
+  {
+    "id": "MISSED_MEDICATION_RISK",
+    "description": "Elevated glucose combined with repeated medication non-adherence.",
+    "severity": "high",
+    "clinicalAction": "Review medication adherence patterns and address potential barriers.",
+    "patientMessageTemplate": "Your glucose is elevated and medication may have been missed.",
+    "enabled": true
+  },
+  {
+    "id": "RECURRENT_HYPOGLYCEMIA",
+    "description": "Multiple instances of low blood sugar (<70 mg/dL) captured across recent history windows.",
+    "severity": "critical",
+    "clinicalAction": "Urgent review of basal insulin or sulfonylurea dosages. High risk for severe clinical events or hypoglycemia unawareness.",
+    "patientMessageTemplate": "⚠️ Alert: We noticed recurrent low blood sugar readings. Please verify your insulin/medication logs and coordinate an adjustment with your care team.",
+    "enabled": true
+  },
+  {
+    "id": "RECURRENT_POST_MEAL_SPIKES",
+    "description": "Consecutive post-meal readings exceed diabetes type specific bounds.",
+    "severity": "high",
+    "clinicalAction": "Evaluate meal insulin-to-carbohydrate ratios or post-prandial medication adherence.",
+    "patientMessageTemplate": "Your blood sugar has spiked after your last few meals. Consider logging precise portions and adjusting your pre-meal planning.",
+    "enabled": true
+  }
+]
