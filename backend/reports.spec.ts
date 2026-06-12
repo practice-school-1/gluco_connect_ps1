@@ -35,7 +35,7 @@ describe('ReportsService', () => {
     (prisma.user.findUnique as jest.Mock).mockResolvedValue({
       id: 'user1',
       role: 'patient',
-      patient: { id: 'patient1' },
+      patient_profile: { id: 'patient1' },
     });
 
     // Mock patient

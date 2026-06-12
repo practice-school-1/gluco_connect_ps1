@@ -14,7 +14,18 @@
     "db:migrate": "prisma migrate dev --name init",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "setup": "npm install && npm run db:generate && npm run db:push"
+    "setup": "npm install && npm run db:generate && npm run db:push",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage"
+  },
+  "jest": {
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "rootDir": ".",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": { "^.+\\.(t|j)s$": "ts-jest" },
+    "collectCoverageFrom": ["**/*.(t|j)s", "!**/node_modules/**", "!**/dist/**"],
+    "testEnvironment": "node"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -41,10 +52,13 @@
     "@nestjs/testing": "^10.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.17.6",
     "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.11.10",
+    "jest": "^30.4.2",
     "prisma": "^5.22.0",
+    "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3"
   }
