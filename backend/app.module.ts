@@ -10,6 +10,8 @@ import { IntegrationsModule } from './integrations';
 import { FoodsModule } from './foods';
 import { ExportModule } from './export';
 import { CronModule } from './cron';
+import { ReportsModule } from './reports';
+import { SummaryModule } from './summary';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { CronModule } from './cron';
     FoodsModule,
     ExportModule,
     CronModule,
+    ReportsModule,
+    SummaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

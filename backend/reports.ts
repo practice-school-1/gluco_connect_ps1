@@ -1,8 +1,7 @@
 import { Controller, Get, Query, UseGuards, Request, Injectable, NotFoundException, Module, ForbiddenException } from '@nestjs/common';
-import { JwtAuthGuard, RolesGuard, Roles } from './auth';
+import { JwtAuthGuard } from './auth';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { PrismaService } from './prisma/prisma.service';
-import { Role } from '@prisma/client';
 
 @Injectable()
 export class ReportsService {
