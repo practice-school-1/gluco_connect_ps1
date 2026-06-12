@@ -182,6 +182,8 @@ model GlucoseReading {
 
   patient Patient @relation(fields: [patient_id], references: [id])
   meal    Meal?   @relation(fields: [meal_id], references: [id])
+
+  @@index([patient_id, recorded_at])
 }
 
 model Meal {
@@ -198,6 +200,8 @@ model Meal {
   patient          Patient          @relation(fields: [patient_id], references: [id])
   meal_items       MealItem[]
   glucose_readings GlucoseReading[]
+
+  @@index([patient_id, logged_at])
 }
 
 model MealItem {
@@ -232,6 +236,8 @@ model Activity {
   created_at      DateTime       @default(now())
 
   patient Patient @relation(fields: [patient_id], references: [id])
+
+  @@index([patient_id, date])
 }
 
 // ──────────────────────────────────────────────
@@ -251,6 +257,8 @@ model Alert {
 
   patient Patient @relation(fields: [patient_id], references: [id])
   doctor  Doctor? @relation(fields: [doctor_id], references: [id])
+
+  @@index([patient_id, is_resolved])
 }
 
 model Insight {
@@ -266,6 +274,9 @@ model Insight {
   created_at     DateTime  @default(now())
 
   patient Patient @relation(fields: [patient_id], references: [id])
+
+  @@index([patient_id, created_at])
+  @@index([patient_id, type])
 }
 
 model Medication {
