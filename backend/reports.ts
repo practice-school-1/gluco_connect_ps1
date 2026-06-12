@@ -8,14 +8,14 @@ export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
   async getWeeklyReport(userId: string, patientId?: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { doctor: true, patient: true } });
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { doctor_profile: true, patient_profile: true } });
     if (!user) throw new NotFoundException('User not found');
 
     let targetPatientId = patientId;
 
     if (user.role === 'patient') {
-      if (!user.patient) throw new NotFoundException('Patient profile not found for user');
-      targetPatientId = user.patient.id;
+      if (!user.patient_profile) throw new NotFoundException('Patient profile not found for user');
+      targetPatientId = user.patient_profile.id;
     } else if (user.role === 'doctor') {
       if (!patientId) {
         throw new NotFoundException('patient_id is required for doctors');
@@ -84,13 +84,12 @@ export class ReportsService {
 
 @ApiTags('Reports')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Get('weekly')
-  @Roles(Role.doctor, Role.patient)
   @ApiOperation({ summary: 'Get key weekly metrics for 90-second review' })
   @ApiQuery({ name: 'patient_id', required: false, description: 'Required if user is a doctor' })
   getWeekly(@Request() req, @Query('patient_id') patientId?: string) {
