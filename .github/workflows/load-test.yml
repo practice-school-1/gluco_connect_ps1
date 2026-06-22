@@ -1,0 +1,58 @@
+name: Load Test (on-demand)
+
+# Trigger manually from GitHub Actions UI → provide the target URL and duration.
+# Never runs automatically — prevents accidental load against production.
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'API base URL to load test (e.g. https://staging.up.railway.app)'
+        required: true
+        default: 'http://localhost:3000'
+      duration_minutes:
+        description: 'Total test duration in minutes (ramp-up + steady + ramp-down)'
+        required: false
+        default: '10'
+      vus:
+        description: 'Number of virtual users at peak'
+        required: false
+        default: '25'
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Run load test
+        env:
+          BASE_URL:     ${{ github.event.inputs.base_url }}
+          TEST_TOKENS:  ${{ secrets.LOAD_TEST_PATIENT_TOKENS }}
+          DOCTOR_TOKEN: ${{ secrets.LOAD_TEST_DOCTOR_TOKEN }}
+        run: |
+          k6 run \
+            --env BASE_URL="$BASE_URL" \
+            --env TEST_TOKENS="$TEST_TOKENS" \
+            --env DOCTOR_TOKEN="$DOCTOR_TOKEN" \
+            backend/load-test/k6-load-test.js
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results-${{ github.run_number }}
+          path: backend/load-test/load-test-results.json
+          retention-days: 30
