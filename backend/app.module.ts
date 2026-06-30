@@ -12,6 +12,7 @@ import { ExportModule } from './export';
 import { CronModule } from './cron';
 import { ReportsModule } from './reports';
 import { SummaryModule } from './summary';
+import { MonitoringModule } from './monitoring';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SummaryModule } from './summary';
     CronModule,
     ReportsModule,
     SummaryModule,
+    MonitoringModule,
   ],
   controllers: [AppController],
   providers: [AppService],

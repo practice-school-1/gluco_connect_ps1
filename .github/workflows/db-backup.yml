@@ -1,0 +1,53 @@
+name: Daily DB Backup
+
+on:
+  schedule:
+    # Runs at 00:00 UTC every day — well outside of peak usage hours for Indian users (IST 05:30).
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Why you are triggering a manual backup'
+        required: false
+        default: 'manual run'
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Run backup script
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          AWS_S3_BACKUP_BUCKET: ${{ secrets.AWS_S3_BACKUP_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+        run: |
+          bash backend/scripts/db-backup.sh /tmp/glucoconnect-backups
+
+      - name: Upload backup artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}-${{ github.run_attempt }}
+          path: /tmp/glucoconnect-backups/*.sql.gz
+          retention-days: 30
+
+      - name: Verify backup file was created
+        run: |
+          count=$(find /tmp/glucoconnect-backups -name "*.sql.gz" | wc -l)
+          if [ "$count" -eq 0 ]; then
+            echo "ERROR: No backup file found after script completed" >&2
+            exit 1
+          fi
+          echo "Backup verified — ${count} file(s) present"
+          ls -lh /tmp/glucoconnect-backups/
