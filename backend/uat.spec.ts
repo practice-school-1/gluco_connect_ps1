@@ -8,7 +8,7 @@
  * Scenarios:
  *  1. Doctor creates profile (invite code generated) → patient links → patient visible in portal
  *  2. Patient logs glucose, meal, and activity — daily summary aggregates all three
- *  3. AI insight generated on first call and returned from cache on the second call
+ *  3. Insight generated on first call and returned from cache on the second call
  *  4. Doctor exports patient CSV (unauthorised access blocked at every guard)
  *  5. Weekly summary cron generates summaries for active patients, skips duplicates
  *  6. Security regression — cross-patient isolation and doctor-only role access
@@ -312,9 +312,9 @@ describe('UAT Scenario 2: patient logs glucose, meal, and activity; daily summar
   });
 });
 
-// ─── Scenario 3: AI insight — generated on first call, cached on second ───────
+// ─── Scenario 3: Insight — generated on first call, cached on second ────────────
 
-describe('UAT Scenario 3: AI insight generated on first call, served from cache on second', () => {
+describe('UAT Scenario 3: Insight generated on first call, served from cache on second', () => {
   let insightsService: InsightsService;
   let mockPrisma:      ReturnType<typeof buildMock>;
 

@@ -14,8 +14,8 @@
  *   BASE_URL=https://glucoconnect-api.up.railway.app k6 run k6-load-test.js
  *
  * Pass-criteria (enforced as thresholds below):
- *   - p95 response time < 500ms for all non-AI endpoints
- *   - p95 response time < 4000ms for POST /insights/daily (LLM endpoint)
+ *   - p95 response time < 500ms for all standard endpoints
+ *   - p95 response time < 4000ms for POST /insights/daily (insight endpoint)
  *   - HTTP error rate < 1% of all requests
  *   - Zero 5xx responses on auth, glucose, and summary endpoints
  */
@@ -198,8 +198,8 @@ export default function () {
 
   sleep(0.5);
 
-  // 9. GET /insights/daily — AI insight (LLM call; cached for today)
-  //    Only 1 in 5 VUs calls this to avoid hammering the LLM API
+  // 9. GET /insights/daily — daily insight (cached for today)
+  //    Only 1 in 5 VUs calls this to avoid hammering the insight endpoint
   if (Math.random() < 0.2) {
     const res = http.get(`${BASE_URL}/insights/daily`, {
       headers,
