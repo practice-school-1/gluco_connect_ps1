@@ -3,7 +3,7 @@ import { JwtAuthGuard } from './auth';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 import { PrismaService } from './prisma/prisma.service';
 import { IsOptional, IsString, IsInt, IsEnum, IsDateString, IsNumber, IsNotEmpty, IsUUID, IsBoolean, ValidateNested, IsArray } from 'class-validator';
-import { ActivitySource, Intensity, ReadingType, ReadingSource, MealType } from '@prisma/client';
+import { ActivitySource, Intensity, ReadingType, ReadingSource, MealType, AlertType } from '@prisma/client';
 import { Type } from 'class-transformer';
 
 export class CreateActivityDto {
@@ -57,9 +57,10 @@ export class CreateActivityDto {
   @IsString()
   notes?: string;
 
-  @ApiProperty({ example: '2023-10-01T07:00:00Z' })
+  @ApiPropertyOptional({ example: '2023-10-01T07:00:00Z' })
+  @IsOptional()
   @IsDateString()
-  started_at: string;
+  started_at?: string;
 
   @ApiPropertyOptional({ example: '2023-10-01T07:45:00Z' })
   @IsOptional()
@@ -216,7 +217,7 @@ export class ActivitiesService {
       data: {
         patient_id: patient.id,
         ...dto,
-        started_at: new Date(dto.started_at),
+        started_at: dto.started_at ? new Date(dto.started_at) : new Date(dto.date),
         ended_at: dto.ended_at ? new Date(dto.ended_at) : null,
         date: new Date(dto.date),
       },
@@ -310,7 +311,7 @@ export class GlucoseService {
     const patient = await this.prisma.patient.findUnique({ where: { user_id: userId } });
     if (!patient) throw new NotFoundException('Patient profile required to log glucose');
 
-    return this.prisma.glucoseReading.create({
+    const reading = await this.prisma.glucoseReading.create({
       data: {
         patient_id: patient.id,
         value_mg_dl: dto.value_mg_dl,
@@ -322,6 +323,30 @@ export class GlucoseService {
         recorded_at: new Date(dto.recorded_at),
       },
     });
+
+    if (dto.value_mg_dl < 70) {
+      await this.prisma.alert.create({
+        data: {
+          patient_id: patient.id,
+          doctor_id: patient.doctor_id,
+          type: AlertType.low_glucose,
+          trigger_value: dto.value_mg_dl,
+          message: `Low glucose reading logged: ${dto.value_mg_dl} mg/dL — hypoglycemia risk.`,
+        },
+      });
+    } else if (dto.value_mg_dl > 300) {
+      await this.prisma.alert.create({
+        data: {
+          patient_id: patient.id,
+          doctor_id: patient.doctor_id,
+          type: AlertType.high_glucose,
+          trigger_value: dto.value_mg_dl,
+          message: `Very high glucose reading logged: ${dto.value_mg_dl} mg/dL.`,
+        },
+      });
+    }
+
+    return reading;
   }
 
   async findAll(userId: string, targetPatientId?: string) {

@@ -76,6 +76,9 @@
     .card { background: var(--s1); border: 1px solid var(--b1); border-radius: var(--r); padding: 1.25rem 1.5rem; }
     .ct { font-size: 14px; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
     .gap { margin-top: 1.25rem; }
+    .note-card { background: var(--s2); border: 1px solid var(--b1); border-radius: var(--rs); padding: 12px 14px; margin-bottom: 8px; }
+    .note-meta { font-size: 11px; color: var(--t3); margin-bottom: 5px; }
+    .note-text { font-size: 13px; line-height: 1.6; color: var(--t2); }
     .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
 
@@ -222,6 +225,7 @@
       <div class="nav-sect">My data</div>
       <div class="nav-item" data-p="medications" onclick="nav('medications')"><span class="nav-icon">💊</span> Medications</div>
       <div class="nav-item" data-p="insights" onclick="nav('insights')"><span class="nav-icon">✦</span> Insights</div>
+      <div class="nav-item" data-p="notes" onclick="nav('notes')"><span class="nav-icon">📝</span> Doctor notes</div>
       <div class="nav-item" data-p="history" onclick="nav('history')"><span class="nav-icon">📋</span> History</div>
       <div class="nav-sect">Account</div>
       <div class="nav-item" data-p="profile" onclick="nav('profile')"><span class="nav-icon">👤</span> Profile</div>
@@ -340,6 +344,12 @@
         <div class="card gap"><div class="ct">Unresolved alerts</div><div id="alrts-list"><div class="empty"><div class="empty-i">✅</div>No alerts — great work!</div></div></div>
       </div>
 
+      <!-- DOCTOR NOTES -->
+      <div id="page-notes" class="page">
+        <div class="ph"><h1>Doctor notes</h1><p>Notes your doctor has shared with you.</p></div>
+        <div class="card"><div id="notes-list"><div class="ldr ldr-l" style="margin:1.5rem 0"></div></div></div>
+      </div>
+
       <!-- HISTORY -->
       <div id="page-history" class="page">
         <div class="ph"><h1>History</h1><p>All your logged data.</p></div>
@@ -449,6 +459,7 @@ function nav(page){
   if(page==='dashboard') loadDashboard();
   if(page==='medications') loadMedications();
   if(page==='insights') loadInsights();
+  if(page==='notes') loadNotes();
   if(page==='history') loadHistory();
   if(page==='profile') loadProfile();
 }
@@ -510,7 +521,15 @@ function renderChips(){$('food-sel').innerHTML=selFoods.map(f=>`<span class="chi
 async function logMeal(){
   const desc=$('m-desc').value.trim(); if(!desc){flash('m-alrt','Enter a meal description.');return;}
   const btn=$('btn-m'); btn.disabled=true; btn.innerHTML='<span class="ldr"></span> Saving…'; clr('m-alrt');
-  try{const body={meal_type:$('m-type').value,description:desc,logged_at:$('m-time').value||new Date().toISOString()};const c=$('m-carbs').value,k=$('m-cal').value,n=$('m-notes').value;if(c)body.carbs_grams=parseFloat(c);if(k)body.calories=parseFloat(k);if(n)body.notes=n;await api('POST','/meals',body);flash('m-alrt','✓ Meal saved!','s');$('m-desc').value='';$('m-carbs').value='';$('m-cal').value='';$('m-notes').value='';selFoods=[];renderChips();setNow('m-time');}
+  try{
+    const n=$('m-notes').value.trim();
+    const meal_items=selFoods.map(f=>({name:f.name,quantity:`${f.typical_portion_grams??100}g`,carbs_grams:Math.round((f.carbs_per_100g??0)*(f.typical_portion_grams??100)/100),calories:Math.round((f.calories_per_100g??0)*(f.typical_portion_grams??100)/100),glycemic_index:f.gi_index,is_regional:!!f.region}));
+    const c=$('m-carbs').value,k=$('m-cal').value;
+    if(!meal_items.length&&(c||k)) meal_items.push({name:desc,carbs_grams:c?parseFloat(c):undefined,calories:k?parseFloat(k):undefined});
+    const body={meal_type:$('m-type').value,notes:n?`${desc} — ${n}`:desc,logged_at:$('m-time').value||new Date().toISOString(),meal_items};
+    await api('POST','/meals',body);
+    flash('m-alrt','✓ Meal saved!','s');$('m-desc').value='';$('m-carbs').value='';$('m-cal').value='';$('m-notes').value='';selFoods=[];renderChips();setNow('m-time');
+  }
   catch(e){flash('m-alrt',e.message);}finally{btn.disabled=false;btn.textContent='Save meal';}
 }
 async function logActivity(){
@@ -540,13 +559,19 @@ async function loadInsights(){
   else al.innerHTML='<div class="empty"><div class="empty-i">✅</div>No unresolved alerts!</div>';
 }
 
+async function loadNotes(){
+  const el=$('notes-list');
+  try{const d=await api('GET','/notes');if(d?.length) el.innerHTML=d.map(n=>`<div class="note-card"><div class="note-meta">${fmt(n.created_at)}</div><div class="note-text">${n.content||''}</div></div>`).join('');else el.innerHTML='<div class="empty"><div class="empty-i">📝</div>No notes from your doctor yet</div>';}
+  catch(e){el.innerHTML=`<div style="color:var(--t3)">${e.message}</div>`;}
+}
+
 async function loadHistory(){
   const[g,m,a]=await Promise.allSettled([api('GET','/glucose'),api('GET','/meals'),api('GET','/activities')]);
   const gt=document.querySelector('#tbl-g tbody');
   if(g.status==='fulfilled'&&g.value?.length) gt.innerHTML=g.value.map(r=>`<tr><td>${gbdg(r.value_mg_dl)}</td><td>${(r.reading_type||'—').replace(/_/g,' ')}</td><td>${fmt(r.recorded_at||r.created_at)}</td><td>${r.notes||'—'}</td></tr>`).join('');
   else gt.innerHTML='<tr><td colspan="4"><div class="empty">No readings yet</div></td></tr>';
   const mt=document.querySelector('#tbl-m tbody');
-  if(m.status==='fulfilled'&&m.value?.length) mt.innerHTML=m.value.map(x=>`<tr><td><span class="bdg bb">${x.meal_type||'—'}</span></td><td style="color:var(--t1)">${x.description||x.notes||'—'}</td><td>${x.total_carbs_grams??x.carbs_grams??'—'}</td><td>${fmt(x.logged_at||x.created_at)}</td></tr>`).join('');
+  if(m.status==='fulfilled'&&m.value?.length) mt.innerHTML=m.value.map(x=>`<tr><td><span class="bdg bb">${x.meal_type||'—'}</span></td><td style="color:var(--t1)">${(x.meal_items?.length?x.meal_items.map(i=>i.name).join(', '):x.notes)||'—'}</td><td>${x.total_carbs_grams??'—'}</td><td>${fmt(x.logged_at||x.created_at)}</td></tr>`).join('');
   else mt.innerHTML='<tr><td colspan="4"><div class="empty">No meals yet</div></td></tr>';
   const at=document.querySelector('#tbl-a tbody');
   if(a.status==='fulfilled'&&a.value?.length) at.innerHTML=a.value.map(x=>`<tr><td style="color:var(--t1)">${x.activity_type||'—'}</td><td>${x.steps??'—'}</td><td>${x.active_minutes?x.active_minutes+' min':'—'}</td><td>${x.intensity||'—'}</td><td>${fmtD(x.date||x.created_at)}</td></tr>`).join('');
