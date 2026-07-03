@@ -4,27 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GlucoConnect — Patient</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0E0F17; --bg2: #131420; --s1: #181927; --s2: #1E2033; --s3: #242538;
-      --b1: #2C2D42; --b2: #383952;
-      --acc: #2EE8A5; --acc2: #1EB87C; --accD: rgba(46,232,165,0.12); --accG: rgba(46,232,165,0.25);
-      --red: #FF4D6A; --redD: rgba(255,77,106,0.12);
-      --yel: #FFB547; --yelD: rgba(255,181,71,0.12);
-      --blu: #5B9BFF; --bluD: rgba(91,155,255,0.12);
-      --t1: #EEEEF5; --t2: #8D8EA8; --t3: #52536A;
-      --r: 14px; --rs: 8px;
+      --bg: #0A0A0B; --bg2: #0D0D0F; --s1: #141416; --s2: #1B1B1E; --s3: #222225;
+      --b1: #2B2B2F; --b2: #3A3A3F;
+      --acc: #F97316; --acc2: #FFB238; --accD: rgba(249,115,22,0.14); --accG: rgba(249,115,22,0.35);
+      --onAcc: #180D02;
+      --grn: #34D399; --grnD: rgba(52,211,153,0.12);
+      --red: #EF4444; --redD: rgba(239,68,68,0.12);
+      --yel: #FBBF24; --yelD: rgba(251,191,36,0.12);
+      --blu: #60A5FA; --bluD: rgba(96,165,250,0.12);
+      --t1: #F5F5F4; --t2: #A8A8AA; --t3: #6B6B70;
+      --r: 16px; --rs: 10px;
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--t1); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--t1); min-height: 100vh; -webkit-font-smoothing: antialiased; }
     ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 3px; }
 
     /* AUTH */
     .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem;
-      background: radial-gradient(ellipse at 25% 25%, rgba(46,232,165,0.07) 0%, transparent 55%), var(--bg); }
-    .auth-card { background: var(--s1); border: 1px solid var(--b1); border-radius: 20px; padding: 2.5rem 2.25rem; width: 100%; max-width: 420px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+      background: radial-gradient(ellipse at 25% 20%, rgba(249,115,22,0.10) 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(255,178,56,0.06) 0%, transparent 50%), var(--bg); }
+    .auth-card { background: var(--s1); border: 1px solid var(--b1); border-radius: 20px; padding: 2.5rem 2.25rem; width: 100%; max-width: 420px; box-shadow: 0 24px 60px rgba(0,0,0,0.6); }
     .logo-row { display: flex; align-items: center; gap: 11px; margin-bottom: 2.25rem; }
-    .logo-mark { width: 38px; height: 38px; background: linear-gradient(135deg, var(--acc), var(--acc2)); border-radius: 11px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 17px; color: #0E0F17; box-shadow: 0 4px 14px var(--accG); flex-shrink: 0; }
+    .logo-mark { width: 38px; height: 38px; background: linear-gradient(135deg, var(--acc), var(--acc2)); border-radius: 11px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 17px; color: var(--onAcc); box-shadow: 0 4px 14px var(--accG); flex-shrink: 0; }
     .brand { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; } .brand em { color: var(--acc); font-style: normal; }
     .auth-card h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 5px; }
     .auth-sub { font-size: 14px; color: var(--t2); margin-bottom: 2rem; line-height: 1.55; }
@@ -40,7 +45,7 @@
 
     /* BUTTONS */
     .btn { padding: 11px 20px; border: none; border-radius: var(--rs); font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: all .2s; font-family: inherit; letter-spacing: -0.1px; }
-    .btn-p { background: linear-gradient(135deg, var(--acc), var(--acc2)); color: #0E0F17; box-shadow: 0 4px 14px var(--accG); }
+    .btn-p { background: linear-gradient(135deg, var(--acc), var(--acc2)); color: var(--onAcc); box-shadow: 0 4px 14px var(--accG); }
     .btn-p:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px var(--accG); }
     .btn-s { background: var(--s3); color: var(--t2); border: 1px solid var(--b1); }
     .btn-s:hover:not(:disabled) { border-color: var(--b2); color: var(--t1); }
@@ -53,12 +58,13 @@
     /* APP SHELL */
     .app { display: none; flex-direction: column; min-height: 100vh; }
     .app.active { display: flex; }
-    .topbar { background: rgba(20,21,32,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--b1); padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .topbar { background: rgba(10,10,11,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--b1); padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .topbar::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: linear-gradient(90deg, var(--acc), var(--acc2), transparent 70%); opacity: 0.6; }
     .topbar-logo { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; }
     .topbar-logo .logo-mark { width: 28px; height: 28px; font-size: 12px; border-radius: 8px; box-shadow: none; }
     .topbar-r { display: flex; align-items: center; gap: 10px; }
     .t-name { font-size: 13px; color: var(--t2); }
-    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accD); border: 1px solid rgba(46,232,165,0.2); color: var(--acc); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accD); border: 1px solid rgba(249,115,22,0.25); color: var(--acc); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .main { display: flex; flex: 1; }
     .sidebar { width: 224px; background: var(--bg2); border-right: 1px solid var(--b1); padding: 1rem 0.75rem; flex-shrink: 0; display: flex; flex-direction: column; gap: 1px; }
     .nav-sect { font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: 0.1em; padding: 10px 10px 4px; margin-top: 4px; }
@@ -76,6 +82,12 @@
     .card { background: var(--s1); border: 1px solid var(--b1); border-radius: var(--r); padding: 1.25rem 1.5rem; }
     .ct { font-size: 14px; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
     .gap { margin-top: 1.25rem; }
+    .log-layout { display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; }
+    .side-card { flex: 1; min-width: 300px; }
+    .side-sum { display: flex; gap: 1.5rem; padding-bottom: 14px; margin-bottom: 6px; border-bottom: 1px solid var(--b1); }
+    .side-sum .sv2 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
+    .side-sum .sl2 { font-size: 11px; color: var(--t3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-top: 4px; }
+    @media (max-width: 900px) { .log-layout { flex-direction: column; } .side-card { width: 100%; } }
     .note-card { background: var(--s2); border: 1px solid var(--b1); border-radius: var(--rs); padding: 12px 14px; margin-bottom: 8px; }
     .note-meta { font-size: 11px; color: var(--t3); margin-bottom: 5px; }
     .note-text { font-size: 13px; line-height: 1.6; color: var(--t2); }
@@ -85,14 +97,14 @@
     /* STAT CARDS */
     .stat { background: var(--s1); border: 1px solid var(--b1); border-radius: var(--r); padding: 1.25rem 1.4rem; position: relative; overflow: hidden; }
     .stat::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
-    .stat.g::after { background: linear-gradient(90deg, var(--acc), transparent); }
+    .stat.g::after { background: linear-gradient(90deg, var(--grn), transparent); }
     .stat.b::after { background: linear-gradient(90deg, var(--blu), transparent); }
     .stat.y::after { background: linear-gradient(90deg, var(--yel), transparent); }
     .stat.r::after { background: linear-gradient(90deg, var(--red), transparent); }
     .sl { font-size: 11px; color: var(--t3); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
     .sv { font-size: 34px; font-weight: 800; margin: 6px 0 3px; line-height: 1; letter-spacing: -1px; }
     .su { font-size: 12px; color: var(--t2); }
-    .stat.g .sv { color: var(--acc); } .stat.b .sv { color: var(--blu); } .stat.y .sv { color: var(--yel); } .stat.r .sv { color: var(--red); }
+    .stat.g .sv { color: var(--grn); } .stat.b .sv { color: var(--blu); } .stat.y .sv { color: var(--yel); } .stat.r .sv { color: var(--red); }
     .si { position: absolute; right: 1.25rem; top: 50%; transform: translateY(-50%); font-size: 26px; opacity: 0.1; }
 
     /* CHART */
@@ -108,32 +120,32 @@
 
     /* BADGES */
     .bdg { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-    .bg { background: var(--accD); color: var(--acc); border: 1px solid rgba(46,232,165,0.2); }
-    .br { background: var(--redD); color: var(--red); border: 1px solid rgba(255,77,106,0.2); }
-    .by { background: var(--yelD); color: var(--yel); border: 1px solid rgba(255,181,71,0.2); }
-    .bb { background: var(--bluD); color: var(--blu); border: 1px solid rgba(91,155,255,0.2); }
+    .bg { background: var(--grnD); color: var(--grn); border: 1px solid rgba(52,211,153,0.25); }
+    .br { background: var(--redD); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+    .by { background: var(--yelD); color: var(--yel); border: 1px solid rgba(251,191,36,0.25); }
+    .bb { background: var(--bluD); color: var(--blu); border: 1px solid rgba(96,165,250,0.25); }
 
     /* ALERTS */
     .alrt { padding: 11px 14px; border-radius: var(--rs); font-size: 13px; margin-bottom: 1rem; }
-    .ae { background: var(--redD); color: var(--red); border: 1px solid rgba(255,77,106,0.2); }
-    .as { background: var(--accD); color: var(--acc); border: 1px solid rgba(46,232,165,0.2); }
-    .ai { background: var(--bluD); color: var(--blu); border: 1px solid rgba(91,155,255,0.2); }
+    .ae { background: var(--redD); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+    .as { background: var(--grnD); color: var(--grn); border: 1px solid rgba(52,211,153,0.25); }
+    .ai { background: var(--bluD); color: var(--blu); border: 1px solid rgba(96,165,250,0.25); }
 
     /* INSIGHT */
     .ins-card { border-radius: var(--r); padding: 1.25rem 1.5rem; margin-bottom: 10px; border: 1px solid; }
-    .ins-card.normal { background: var(--accD); border-color: rgba(46,232,165,0.2); }
-    .ins-card.warning { background: var(--yelD); border-color: rgba(255,181,71,0.2); }
-    .ins-card.danger { background: var(--redD); border-color: rgba(255,77,106,0.2); }
-    .ins-card.info { background: var(--bluD); border-color: rgba(91,155,255,0.2); }
+    .ins-card.normal { background: var(--grnD); border-color: rgba(52,211,153,0.25); }
+    .ins-card.warning { background: var(--yelD); border-color: rgba(251,191,36,0.25); }
+    .ins-card.danger { background: var(--redD); border-color: rgba(239,68,68,0.25); }
+    .ins-card.info { background: var(--bluD); border-color: rgba(96,165,250,0.25); }
     .ins-flag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-    .ins-card.normal .ins-flag { background: rgba(46,232,165,0.15); color: var(--acc); }
-    .ins-card.warning .ins-flag { background: rgba(255,181,71,0.15); color: var(--yel); }
-    .ins-card.danger .ins-flag { background: rgba(255,77,106,0.15); color: var(--red); }
-    .ins-card.info .ins-flag { background: rgba(91,155,255,0.15); color: var(--blu); }
-    .ins-card.normal .ins-text { color: #B0F0D8; }
-    .ins-card.warning .ins-text { color: #FADDAD; }
-    .ins-card.danger .ins-text { color: #FFBBC8; }
-    .ins-card.info .ins-text { color: #B5CEFF; }
+    .ins-card.normal .ins-flag { background: rgba(52,211,153,0.18); color: var(--grn); }
+    .ins-card.warning .ins-flag { background: rgba(251,191,36,0.18); color: var(--yel); }
+    .ins-card.danger .ins-flag { background: rgba(239,68,68,0.18); color: var(--red); }
+    .ins-card.info .ins-flag { background: rgba(96,165,250,0.18); color: var(--blu); }
+    .ins-card.normal .ins-text { color: #A7F3D9; }
+    .ins-card.warning .ins-text { color: #FDE68A; }
+    .ins-card.danger .ins-text { color: #FCA5A5; }
+    .ins-card.info .ins-text { color: #93C5FD; }
     .ins-text { font-size: 14px; line-height: 1.65; }
 
     /* LOG ROW */
@@ -145,7 +157,7 @@
     .mr { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--b1); }
     .mr:last-child { border-bottom: none; }
     .mc { width: 24px; height: 24px; border: 2px solid var(--b2); border-radius: 7px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 12px; transition: all .2s; }
-    .mc.taken { background: var(--acc); border-color: var(--acc); color: #0E0F17; font-weight: 800; }
+    .mc.taken { background: var(--grn); border-color: var(--grn); color: var(--onAcc); font-weight: 800; }
     .mc.skipped { background: var(--yelD); border-color: var(--yel); color: var(--yel); }
     .mn { font-size: 14px; font-weight: 600; color: var(--t1); flex: 1; }
     .md2 { font-size: 12px; color: var(--t3); }
@@ -154,16 +166,16 @@
     .fr { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: var(--s2); border: 1px solid var(--b1); border-radius: var(--rs); margin-bottom: 5px; font-size: 13px; cursor: pointer; transition: border-color .15s, background .15s; }
     .fr:hover { border-color: var(--acc); background: var(--accD); }
     .gi { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
-    .gi.low { background: var(--accD); color: var(--acc); } .gi.med { background: var(--yelD); color: var(--yel); } .gi.high { background: var(--redD); color: var(--red); }
+    .gi.low { background: var(--grnD); color: var(--grn); } .gi.med { background: var(--yelD); color: var(--yel); } .gi.high { background: var(--redD); color: var(--red); }
     .chips { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
-    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--accD); border: 1px solid rgba(46,232,165,0.2); border-radius: 20px; font-size: 12px; color: var(--acc); }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--accD); border: 1px solid rgba(249,115,22,0.25); border-radius: 20px; font-size: 12px; color: var(--acc); }
     .chip button { background: none; border: none; cursor: pointer; color: var(--acc); font-size: 15px; line-height: 1; padding: 0; opacity: 0.7; }
     .chip button:hover { opacity: 1; }
 
     /* MISC */
     .empty { text-align: center; padding: 2rem 1rem; color: var(--t3); font-size: 13px; }
     .empty-i { font-size: 32px; margin-bottom: 8px; opacity: 0.4; }
-    .ldr { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.25); border-top-color: #0E0F17; border-radius: 50%; animation: sp .7s linear infinite; }
+    .ldr { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.25); border-top-color: var(--onAcc); border-radius: 50%; animation: sp .7s linear infinite; }
     .ldr-l { border-color: rgba(255,255,255,0.1); border-top-color: var(--acc); }
     @keyframes sp { to { transform: rotate(360deg); } }
     .psect { margin-bottom: 2rem; }
@@ -264,67 +276,85 @@
       <!-- LOG GLUCOSE -->
       <div id="page-log-glucose" class="page">
         <div class="ph"><h1>Log glucose</h1><p>Record your blood glucose measurement.</p></div>
-        <div class="card" style="max-width:480px">
-          <div id="g-alrt"></div>
-          <div class="form-group"><label>Glucose value (mg/dL) *</label><input id="g-val" type="number" min="20" max="600" placeholder="e.g. 105" style="font-size:22px;font-weight:700;letter-spacing:-1px"></div>
-          <div class="form-group"><label>Reading type *</label>
-            <select id="g-type">
-              <option value="fasting">Fasting (morning)</option><option value="pre_meal">Pre-meal</option>
-              <option value="post_meal">Post-meal (2h after)</option><option value="random">Random</option><option value="bedtime">Bedtime</option>
-            </select>
+        <div class="log-layout">
+          <div class="card" style="max-width:480px;width:100%">
+            <div id="g-alrt"></div>
+            <div class="form-group"><label>Glucose value (mg/dL) *</label><input id="g-val" type="number" min="20" max="600" placeholder="e.g. 105" style="font-size:22px;font-weight:700;letter-spacing:-1px"></div>
+            <div class="form-group"><label>Reading type *</label>
+              <select id="g-type">
+                <option value="fasting">Fasting (morning)</option><option value="pre_meal">Pre-meal</option>
+                <option value="post_meal">Post-meal (2h after)</option><option value="random">Random</option><option value="bedtime">Bedtime</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Date &amp; time</label><input id="g-time" type="datetime-local"></div>
+            <div class="form-group"><label>Notes</label><textarea id="g-notes" placeholder="Any context…"></textarea></div>
+            <button class="btn btn-p" id="btn-g" onclick="logGlucose()">Save reading</button>
           </div>
-          <div class="form-group"><label>Date &amp; time</label><input id="g-time" type="datetime-local"></div>
-          <div class="form-group"><label>Notes</label><textarea id="g-notes" placeholder="Any context…"></textarea></div>
-          <button class="btn btn-p" id="btn-g" onclick="logGlucose()">Save reading</button>
+          <div class="card side-card">
+            <div class="ct">Today so far</div>
+            <div id="g-side"><div style="color:var(--t3);font-size:13px">Loading…</div></div>
+          </div>
         </div>
       </div>
 
       <!-- LOG MEAL -->
       <div id="page-log-meal" class="page">
         <div class="ph"><h1>Log meal</h1><p>Record what you ate and when.</p></div>
-        <div class="card" style="max-width:520px">
-          <div id="m-alrt"></div>
-          <div class="form-group"><label>Meal type *</label>
-            <select id="m-type"><option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="snack">Snack</option></select>
+        <div class="log-layout">
+          <div class="card" style="max-width:520px;width:100%">
+            <div id="m-alrt"></div>
+            <div class="form-group"><label>Meal type *</label>
+              <select id="m-type"><option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="snack">Snack</option></select>
+            </div>
+            <div class="form-group">
+              <label>Search Indian foods</label>
+              <input id="food-q" type="text" placeholder="e.g. roti, idli, rajma, chai…" oninput="searchFoods()" autocomplete="off">
+              <div id="food-res" style="margin-top:6px"></div>
+              <div id="food-sel" class="chips"></div>
+            </div>
+            <div class="form-group"><label>Description *</label><textarea id="m-desc" placeholder="e.g. 2 rotis with dal and sabzi…"></textarea></div>
+            <div class="g2">
+              <div class="form-group"><label>Carbs (g)</label><input id="m-carbs" type="number" min="0" placeholder="Optional"></div>
+              <div class="form-group"><label>Calories</label><input id="m-cal" type="number" min="0" placeholder="Optional"></div>
+            </div>
+            <div class="form-group"><label>Date &amp; time</label><input id="m-time" type="datetime-local"></div>
+            <div class="form-group"><label>Notes</label><textarea id="m-notes" placeholder="Portion size, how you felt…"></textarea></div>
+            <button class="btn btn-p" id="btn-m" onclick="logMeal()">Save meal</button>
           </div>
-          <div class="form-group">
-            <label>Search Indian foods</label>
-            <input id="food-q" type="text" placeholder="e.g. roti, idli, rajma, chai…" oninput="searchFoods()" autocomplete="off">
-            <div id="food-res" style="margin-top:6px"></div>
-            <div id="food-sel" class="chips"></div>
+          <div class="card side-card">
+            <div class="ct">Today so far</div>
+            <div id="m-side"><div style="color:var(--t3);font-size:13px">Loading…</div></div>
           </div>
-          <div class="form-group"><label>Description *</label><textarea id="m-desc" placeholder="e.g. 2 rotis with dal and sabzi…"></textarea></div>
-          <div class="g2">
-            <div class="form-group"><label>Carbs (g)</label><input id="m-carbs" type="number" min="0" placeholder="Optional"></div>
-            <div class="form-group"><label>Calories</label><input id="m-cal" type="number" min="0" placeholder="Optional"></div>
-          </div>
-          <div class="form-group"><label>Date &amp; time</label><input id="m-time" type="datetime-local"></div>
-          <div class="form-group"><label>Notes</label><textarea id="m-notes" placeholder="Portion size, how you felt…"></textarea></div>
-          <button class="btn btn-p" id="btn-m" onclick="logMeal()">Save meal</button>
         </div>
       </div>
 
       <!-- LOG ACTIVITY -->
       <div id="page-log-activity" class="page">
         <div class="ph"><h1>Log activity</h1><p>Track your physical activity.</p></div>
-        <div class="card" style="max-width:480px">
-          <div id="a-alrt"></div>
-          <div class="form-group"><label>Activity type</label>
-            <select id="a-type"><option value="walking">🚶 Walking</option><option value="running">🏃 Running</option><option value="yoga">🧘 Yoga</option><option value="gym">🏋️ Gym</option><option value="cycling">🚴 Cycling</option><option value="swimming">🏊 Swimming</option><option value="other">Other</option></select>
-          </div>
-          <div class="g2">
-            <div class="form-group"><label>Steps</label><input id="a-steps" type="number" min="0" placeholder="e.g. 5000"></div>
-            <div class="form-group"><label>Duration (min)</label><input id="a-dur" type="number" min="0" placeholder="e.g. 45"></div>
-          </div>
-          <div class="g2">
-            <div class="form-group"><label>Calories burned</label><input id="a-cal" type="number" min="0" placeholder="Optional"></div>
-            <div class="form-group"><label>Intensity</label>
-              <select id="a-int"><option value="light">Light</option><option value="moderate" selected>Moderate</option><option value="vigorous">Vigorous</option></select>
+        <div class="log-layout">
+          <div class="card" style="max-width:480px;width:100%">
+            <div id="a-alrt"></div>
+            <div class="form-group"><label>Activity type</label>
+              <select id="a-type"><option value="walking">🚶 Walking</option><option value="running">🏃 Running</option><option value="yoga">🧘 Yoga</option><option value="gym">🏋️ Gym</option><option value="cycling">🚴 Cycling</option><option value="swimming">🏊 Swimming</option><option value="other">Other</option></select>
             </div>
+            <div class="g2">
+              <div class="form-group"><label>Steps</label><input id="a-steps" type="number" min="0" placeholder="e.g. 5000"></div>
+              <div class="form-group"><label>Duration (min)</label><input id="a-dur" type="number" min="0" placeholder="e.g. 45"></div>
+            </div>
+            <div class="g2">
+              <div class="form-group"><label>Calories burned</label><input id="a-cal" type="number" min="0" placeholder="Optional"></div>
+              <div class="form-group"><label>Intensity</label>
+                <select id="a-int"><option value="light">Light</option><option value="moderate" selected>Moderate</option><option value="vigorous">Vigorous</option></select>
+              </div>
+            </div>
+            <div class="form-group"><label>Date *</label><input id="a-date" type="date"></div>
+            <div class="form-group"><label>Notes</label><textarea id="a-notes" placeholder="How did it feel?"></textarea></div>
+            <button class="btn btn-p" id="btn-a" onclick="logActivity()">Save activity</button>
           </div>
-          <div class="form-group"><label>Date *</label><input id="a-date" type="date"></div>
-          <div class="form-group"><label>Notes</label><textarea id="a-notes" placeholder="How did it feel?"></textarea></div>
-          <button class="btn btn-p" id="btn-a" onclick="logActivity()">Save activity</button>
+          <div class="card side-card">
+            <div class="ct">Today so far</div>
+            <div id="a-side"><div style="color:var(--t3);font-size:13px">Loading…</div></div>
+          </div>
         </div>
       </div>
 
@@ -457,6 +487,9 @@ function nav(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   $('page-'+page)?.classList.add('active');
   if(page==='dashboard') loadDashboard();
+  if(page==='log-glucose') loadGlucoseSide();
+  if(page==='log-meal') loadMealSide();
+  if(page==='log-activity') loadActivitySide();
   if(page==='medications') loadMedications();
   if(page==='insights') loadInsights();
   if(page==='notes') loadNotes();
@@ -483,7 +516,7 @@ async function loadDashboard(){
       const lbs=rds.map(r=>new Date(r.recorded_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}));
       const vals=rds.map(r=>r.value_mg_dl);
       if(gci) gci.destroy();
-      gci=new Chart(cv,{type:'line',data:{labels:lbs,datasets:[{data:vals,borderColor:'#2EE8A5',backgroundColor:'rgba(46,232,165,0.06)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:vals.map(v=>v<70?'#FFB547':v>180?'#FF4D6A':'#2EE8A5'),pointBorderColor:'transparent',tension:0.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y} mg/dL`}}},scales:{y:{min:40,max:Math.max(250,...(vals.length?vals:[250])),grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#52536A',font:{size:11}},border:{display:false}},x:{grid:{display:false},ticks:{color:'#52536A',font:{size:11}},border:{display:false}}}}});
+      gci=new Chart(cv,{type:'line',data:{labels:lbs,datasets:[{data:vals,borderColor:'#34D399',backgroundColor:'rgba(52,211,153,0.06)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:vals.map(v=>v<70?'#FBBF24':v>180?'#EF4444':'#34D399'),pointBorderColor:'transparent',tension:0.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y} mg/dL`}}},scales:{y:{min:40,max:Math.max(250,...(vals.length?vals:[250])),grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6B6B70',font:{size:11}},border:{display:false}},x:{grid:{display:false},ticks:{color:'#6B6B70',font:{size:11}},border:{display:false}}}}});
     } else { cv.parentElement.innerHTML=`<div class="empty"><div class="empty-i">📈</div>Log a reading to see your trend</div>`; }
     // Meds
     if(adh.status==='fulfilled'&&adh.value?.length){
@@ -500,10 +533,24 @@ async function loadDashboard(){
 }
 async function qMed(id,skip){try{await api('POST',`/medications/${id}/log`,{skipped:skip});loadDashboard();}catch(e){alert(e.message);}}
 
+function isToday(d){return d && new Date(d).toDateString()===new Date().toDateString();}
+
+async function loadGlucoseSide(){
+  const el=$('g-side');
+  try{
+    const d=await api('GET','/glucose');
+    const today=(d||[]).filter(r=>isToday(r.recorded_at||r.created_at)).sort((a,b)=>new Date(b.recorded_at)-new Date(a.recorded_at));
+    const avg=today.length?Math.round(today.reduce((s,r)=>s+r.value_mg_dl,0)/today.length):null;
+    let html=`<div class="side-sum"><div><div class="sv2">${today.length}</div><div class="sl2">Readings</div></div><div><div class="sv2">${avg??'—'}</div><div class="sl2">Avg mg/dL</div></div></div>`;
+    html+=today.length?today.map(r=>`<div class="lr"><div><div class="lv">${gbdg(r.value_mg_dl)}</div><div class="lm">${(r.reading_type||'').replace(/_/g,' ')} · ${fmt(r.recorded_at)}</div></div></div>`).join(''):'<div class="empty" style="padding:1.5rem 0"><div class="empty-i">💉</div>No readings yet today</div>';
+    el.innerHTML=html;
+  }catch(e){el.innerHTML=`<div style="color:var(--t3)">${e.message}</div>`;}
+}
+
 async function logGlucose(){
   const v=parseFloat($('g-val').value); if(!v||v<20||v>600){flash('g-alrt','Enter a valid value (20–600 mg/dL).');return;}
   const btn=$('btn-g'); btn.disabled=true; btn.innerHTML='<span class="ldr"></span> Saving…'; clr('g-alrt');
-  try{await api('POST','/glucose',{value_mg_dl:v,reading_type:$('g-type').value,recorded_at:$('g-time').value||new Date().toISOString(),notes:$('g-notes').value||undefined});flash('g-alrt','✓ Reading saved!','s');$('g-val').value='';$('g-notes').value='';setNow('g-time');}
+  try{await api('POST','/glucose',{value_mg_dl:v,reading_type:$('g-type').value,recorded_at:$('g-time').value||new Date().toISOString(),notes:$('g-notes').value||undefined});flash('g-alrt','✓ Reading saved!','s');$('g-val').value='';$('g-notes').value='';setNow('g-time');loadGlucoseSide();}
   catch(e){flash('g-alrt',e.message);}finally{btn.disabled=false;btn.textContent='Save reading';}
 }
 
@@ -518,6 +565,18 @@ function selFood(f){if(selFoods.find(x=>x.id===f.id))return;selFoods.push(f);$('
 function remFood(id){selFoods=selFoods.filter(f=>f.id!==id);renderChips();const tc=selFoods.reduce((s,x)=>s+((x.carbs_per_100g??0)*(x.typical_portion_grams??100)/100),0);$('m-carbs').value=selFoods.length?(Math.round(tc)||''):'';}
 function renderChips(){$('food-sel').innerHTML=selFoods.map(f=>`<span class="chip">${f.name} <span class="gi ${giCls(f.gi_value)}" style="font-size:10px">GI ${f.gi_value??'?'}</span><button onclick="remFood('${f.id}')">×</button></span>`).join('');}
 
+async function loadMealSide(){
+  const el=$('m-side');
+  try{
+    const d=await api('GET','/meals');
+    const today=(d||[]).filter(m=>isToday(m.logged_at||m.created_at)).sort((a,b)=>new Date(b.logged_at)-new Date(a.logged_at));
+    const carbs=today.reduce((s,m)=>s+(m.total_carbs_grams||0),0);
+    let html=`<div class="side-sum"><div><div class="sv2">${today.length}</div><div class="sl2">Meals</div></div><div><div class="sv2">${Math.round(carbs)}</div><div class="sl2">Carbs (g)</div></div></div>`;
+    html+=today.length?today.map(m=>`<div class="lr"><div><div class="lv" style="font-size:13px;font-weight:600">${(m.meal_items?.length?m.meal_items.map(i=>i.name).join(', '):m.notes)||m.meal_type}</div><div class="lm">${(m.meal_type||'').replace(/_/g,' ')} · ${m.total_carbs_grams??0}g carbs · ${fmt(m.logged_at)}</div></div></div>`).join(''):'<div class="empty" style="padding:1.5rem 0"><div class="empty-i">🍽</div>No meals logged yet today</div>';
+    el.innerHTML=html;
+  }catch(e){el.innerHTML=`<div style="color:var(--t3)">${e.message}</div>`;}
+}
+
 async function logMeal(){
   const desc=$('m-desc').value.trim(); if(!desc){flash('m-alrt','Enter a meal description.');return;}
   const btn=$('btn-m'); btn.disabled=true; btn.innerHTML='<span class="ldr"></span> Saving…'; clr('m-alrt');
@@ -528,13 +587,25 @@ async function logMeal(){
     if(!meal_items.length&&(c||k)) meal_items.push({name:desc,carbs_grams:c?parseFloat(c):undefined,calories:k?parseFloat(k):undefined});
     const body={meal_type:$('m-type').value,notes:n?`${desc} — ${n}`:desc,logged_at:$('m-time').value||new Date().toISOString(),meal_items};
     await api('POST','/meals',body);
-    flash('m-alrt','✓ Meal saved!','s');$('m-desc').value='';$('m-carbs').value='';$('m-cal').value='';$('m-notes').value='';selFoods=[];renderChips();setNow('m-time');
+    flash('m-alrt','✓ Meal saved!','s');$('m-desc').value='';$('m-carbs').value='';$('m-cal').value='';$('m-notes').value='';selFoods=[];renderChips();setNow('m-time');loadMealSide();
   }
   catch(e){flash('m-alrt',e.message);}finally{btn.disabled=false;btn.textContent='Save meal';}
 }
+async function loadActivitySide(){
+  const el=$('a-side');
+  try{
+    const d=await api('GET','/activities');
+    const today=(d||[]).filter(a=>isToday(a.date||a.created_at)).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    const steps=today.reduce((s,a)=>s+(a.steps||0),0);
+    let html=`<div class="side-sum"><div><div class="sv2">${today.length}</div><div class="sl2">Logged</div></div><div><div class="sv2">${steps}</div><div class="sl2">Steps</div></div></div>`;
+    html+=today.length?today.map(a=>`<div class="lr"><div><div class="lv" style="font-size:13px;font-weight:600;text-transform:capitalize">${a.activity_type||'Activity'}</div><div class="lm">${a.steps?a.steps+' steps · ':''}${a.active_minutes?a.active_minutes+' min · ':''}${a.intensity||''}</div></div></div>`).join(''):'<div class="empty" style="padding:1.5rem 0"><div class="empty-i">🏃</div>No activity logged yet today</div>';
+    el.innerHTML=html;
+  }catch(e){el.innerHTML=`<div style="color:var(--t3)">${e.message}</div>`;}
+}
+
 async function logActivity(){
   const btn=$('btn-a'); btn.disabled=true; btn.innerHTML='<span class="ldr"></span> Saving…'; clr('a-alrt');
-  try{const body={activity_type:$('a-type').value,intensity:$('a-int').value,date:$('a-date').value||todayStr()};const s=$('a-steps').value,d=$('a-dur').value,c=$('a-cal').value,n=$('a-notes').value;if(s)body.steps=parseInt(s);if(d)body.active_minutes=parseInt(d);if(c)body.calories_burned=parseFloat(c);if(n)body.notes=n;await api('POST','/activities',body);flash('a-alrt','✓ Activity saved!','s');['a-steps','a-dur','a-cal','a-notes'].forEach(i=>$(i).value='');}
+  try{const body={activity_type:$('a-type').value,intensity:$('a-int').value,date:$('a-date').value||todayStr()};const s=$('a-steps').value,d=$('a-dur').value,c=$('a-cal').value,n=$('a-notes').value;if(s)body.steps=parseInt(s);if(d)body.active_minutes=parseInt(d);if(c)body.calories_burned=parseFloat(c);if(n)body.notes=n;await api('POST','/activities',body);flash('a-alrt','✓ Activity saved!','s');['a-steps','a-dur','a-cal','a-notes'].forEach(i=>$(i).value='');loadActivitySide();}
   catch(e){flash('a-alrt',e.message);}finally{btn.disabled=false;btn.textContent='Save activity';}
 }
 
@@ -616,7 +687,7 @@ async function saveProfile(){
   catch(e){flash('prof-alrt',e.message||'Failed to save.');}finally{btn.disabled=false;btn.textContent='Save profile';}
 }
 
-if(token){api('GET','/patients/me').then(initApp).catch(()=>{localStorage.removeItem('gc_patient_token');token=null;});}
+if(token){api('GET','/patients/profile').then(initApp).catch(()=>{localStorage.removeItem('gc_patient_token');token=null;});}
 </script>
 </body>
 </html>
