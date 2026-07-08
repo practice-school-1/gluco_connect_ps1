@@ -1,6 +1,7 @@
 export const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 
-const TOKEN_KEY = "gc_doctor_token";
+const TOKEN_KEY = "gc_token";
+const ROLE_KEY = "gc_role";
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -9,6 +10,15 @@ export function getToken() {
 export function setToken(token) {
   if (token) localStorage.setItem(TOKEN_KEY, token);
   else localStorage.removeItem(TOKEN_KEY);
+}
+
+export function getRole() {
+  return localStorage.getItem(ROLE_KEY);
+}
+
+export function setRole(role) {
+  if (role) localStorage.setItem(ROLE_KEY, role);
+  else localStorage.removeItem(ROLE_KEY);
 }
 
 export async function api(method, path, body) {

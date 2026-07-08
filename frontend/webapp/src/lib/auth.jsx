@@ -1,36 +1,45 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { api, getToken, setToken } from "./api";
+import { api, getRole, getToken, setRole, setToken } from "./api";
 
 const AuthContext = createContext(null);
 
+const PROFILE_PATH = { doctor: "/doctors/profile", patient: "/patients/profile" };
+
 export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
+  const [role, setRoleState] = useState(getRole());
   const [ready, setReady] = useState(false);
 
-  const loadProfile = useCallback(async () => {
+  const loadProfile = useCallback(async (forRole) => {
+    const r = forRole || getRole();
+    if (!r) return null;
     try {
-      const p = await api("GET", "/doctors/profile");
+      const p = await api("GET", PROFILE_PATH[r]);
       setProfile(p);
+      setRoleState(r);
       return p;
     } catch {
       setToken(null);
+      setRole(null);
       setProfile(null);
+      setRoleState(null);
       return null;
     }
   }, []);
 
   useEffect(() => {
     (async () => {
-      if (getToken()) await loadProfile();
+      if (getToken() && getRole()) await loadProfile();
       setReady(true);
     })();
   }, [loadProfile]);
 
-  const login = useCallback(
+  const loginDoctor = useCallback(
     async (email, password) => {
       const d = await api("POST", "/auth/login", { email, password });
       setToken(d.access_token);
-      await loadProfile();
+      setRole("doctor");
+      await loadProfile("doctor");
     },
     [loadProfile]
   );
@@ -39,6 +48,7 @@ export function AuthProvider({ children }) {
     async ({ email, password, full_name, license_number, specialty, clinic_name }) => {
       const d = await api("POST", "/auth/register/doctor", { email, password });
       setToken(d.access_token);
+      setRole("doctor");
       try {
         await api("POST", "/doctors/profile", {
           full_name,
@@ -49,19 +59,46 @@ export function AuthProvider({ children }) {
       } catch {
         // profile creation can be retried from the Profile page
       }
-      await loadProfile();
+      await loadProfile("doctor");
+    },
+    [loadProfile]
+  );
+
+  const sendOtp = useCallback(async (phone) => {
+    await api("POST", "/auth/send-otp", { phone });
+  }, []);
+
+  const verifyOtp = useCallback(
+    async (phone, otp) => {
+      const d = await api("POST", "/auth/verify-otp", { phone, otp });
+      setToken(d.access_token);
+      setRole("patient");
+      await loadProfile("patient");
     },
     [loadProfile]
   );
 
   const logout = useCallback(() => {
     setToken(null);
+    setRole(null);
     setProfile(null);
+    setRoleState(null);
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ profile, setProfile, ready, isAuthed: !!getToken() && !!profile, login, registerDoctor, logout, refreshProfile: loadProfile }}
+      value={{
+        profile,
+        role,
+        ready,
+        isAuthed: !!getToken() && !!getRole() && !!profile,
+        loginDoctor,
+        registerDoctor,
+        sendOtp,
+        verifyOtp,
+        logout,
+        refreshProfile: () => loadProfile(role),
+      }}
     >
       {children}
     </AuthContext.Provider>
