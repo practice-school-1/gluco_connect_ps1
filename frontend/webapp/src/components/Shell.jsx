@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { useAlerts } from "../lib/alerts";
 import { Button } from "./ui";
@@ -45,9 +45,14 @@ function AlertBadge() {
 export default function Shell() {
   const { profile, role, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const name = profile?.full_name || (role === "doctor" ? "Doctor" : "Patient");
   const nav = role === "doctor" ? NAV_DOCTOR : NAV_PATIENT;
   const profilePath = role === "doctor" ? "/doctor/profile" : "/patient/profile";
+
+  if (role === "patient" && !profile?.full_name && location.pathname !== profilePath) {
+    return <Navigate to={profilePath} replace />;
+  }
 
   function handleLogout() {
     logout();
