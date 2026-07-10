@@ -18,12 +18,17 @@ export function AuthProvider({ children }) {
       setProfile(p);
       setRoleState(r);
       return p;
-    } catch {
-      setToken(null);
-      setRole(null);
-      setProfile(null);
-      setRoleState(null);
-      return null;
+    } catch (err) {
+      if (err.status === 401) {
+        setToken(null);
+        setRole(null);
+        setProfile(null);
+        setRoleState(null);
+        return null;
+      }
+      setProfile({});
+      setRoleState(r);
+      return {};
     }
   }, []);
 
@@ -73,7 +78,7 @@ export function AuthProvider({ children }) {
       const d = await api("POST", "/auth/verify-otp", { phone, otp });
       setToken(d.access_token);
       setRole("patient");
-      await loadProfile("patient");
+      return await loadProfile("patient");
     },
     [loadProfile]
   );

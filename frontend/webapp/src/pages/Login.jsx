@@ -232,8 +232,8 @@ function PatientAuth({ navigate }) {
     }
     setBusy(true);
     try {
-      await verifyOtp(phone, otp.trim());
-      navigate("/patient/dashboard");
+      const profile = await verifyOtp(phone, otp.trim());
+      navigate(profile?.full_name ? "/patient/dashboard" : "/patient/profile");
     } catch (err) {
       setError(err.message || "Verification failed.");
     } finally {
