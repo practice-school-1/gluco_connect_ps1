@@ -1,0 +1,23 @@
+{
+  "name": "ai-engine",
+  "version": "1.0.0",
+  "description": "Clinical decision-support and recommendation engine for glucose monitoring and diabetes risk management",
+  "type": "module",
+  "main": "services/recommendationService.js",
+ "scripts": {
+  "test": "node --test test/recommendation.test.js",
+  "validate": "node validate.js",
+  "simulate": "node validate.js"
+},
+  "keywords": [
+  "diabetes",
+  "clinical-decision-support",
+  "glucose-monitoring",
+  "risk-stratification",
+  "healthcare-ai",
+  "digital-health",
+  "rule-engine"
+],
+  "author": "GlucoConnect Team",
+  "license": "MIT"
+}

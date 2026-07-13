@@ -1,0 +1,17 @@
+Please generate a clinical weekly round-up for the attending physician.
+
+Review the patient's weekly metrics and the key insights detected by the pattern engine. Summarise the week in 3-4 bullet points. Be precise and objective. Highlight any concerning trends or adherence issues.
+
+Weekly Metrics:
+Patient Name: {patientName}
+Diabetes Type: {diabetesType}
+Time in Range (TIR): {tirPercent}%
+Average Glucose: {avgGlucose} mg/dL
+Glycemic Variability (CV): {cvPercent}%
+Medication Adherence: {adherenceRate}%
+Average Daily Steps: {avgSteps}
+
+Pattern Engine Insights:
+{topInsights}
+
+Your task: Provide a rapid, high-yield clinical summary suitable for a physician reviewing their panel before an appointment.

@@ -1,0 +1,17 @@
+Write a concise and objective clinical summary of this patient's recent blood sugar logs for their doctor.
+
+Use clinical terms and avoid conversational fluff. Keep it under 2-3 sentences max. Bullet points can be used if helpful.
+
+Structured Engine context:
+Risk Category: {riskLevel} (Score: {riskScore}/100)
+Main Event: {ruleId} (Severity: {severity}, Confidence: {confidence})
+Other Events: {secondaryRisks}
+TIR: {tirPercent}%
+CV%: {cvPercent}%
+Fasting Trend: {glucoseTrend}
+Logging Adherence: {adherenceRate}%
+
+Rule Action Recommendation:
+{recommendation}
+
+Your task: Summarize the glycemic patterns, point out primary risks, and state the engine's recommended action. Avoid diagnostic or prescription statements.

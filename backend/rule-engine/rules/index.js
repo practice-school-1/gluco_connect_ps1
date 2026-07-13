@@ -54,10 +54,10 @@ export const analyzePatientData = (currentReading, history = []) => {
   const rawRiskScore = triggeredRules.reduce((sum, rule) => sum + (severityScore[rule.severity] || 0), 0);
   const riskScore = Math.min(rawRiskScore, 100); // 0-100 Clinical Scale Cap
 
-  let riskLevel = "LOW";
-  if (riskScore >= 100) riskLevel = "CRITICAL";
-  else if (riskScore >= 40) riskLevel = "HIGH";
-  else if (riskScore >= 20) riskLevel = "MEDIUM";
+  let riskLevel = "low";
+  if (riskScore >= 100) riskLevel = "critical";
+  else if (riskScore >= 40) riskLevel = "high";
+  else if (riskScore >= 20) riskLevel = "medium";
 
   const sortedTriggered = [...triggeredRules].sort((a, b) => severityOrder[b.severity] - severityOrder[a.severity]);
 
@@ -67,7 +67,10 @@ export const analyzePatientData = (currentReading, history = []) => {
   // Mapped transparently with explicit ruleConfidenceScore
   const triggeredRulesDetailed = sortedTriggered.map(rule => ({
     rule: rule.id,
+    description: rule.description,
     severity: rule.severity,
+    clinicalAction: rule.clinicalAction,
+    patientMessage: (rule.patientMessageTemplate || '').replace(/\{value\}/g, currentReading.glucoseReading),
     ruleConfidenceScore: calculateRuleConfidence(rule.id, currentReading, history)
   }));
 
