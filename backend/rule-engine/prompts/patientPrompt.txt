@@ -1,0 +1,15 @@
+Explain this clinical engine recommendation to the patient. Keep it between 3 and 4 sentences.
+
+Make it warm, supportive, and simple to understand. Speak directly to them without using complex medical jargon. Explain the trend clearly instead of listing raw numbers.
+
+Here is the log data:
+Risk Level: {riskLevel}
+Event: {ruleId}
+Time in Range: {tirPercent}%
+Fluctuations: {cvPercent}%
+Fasting Trend: {glucoseTrend}
+
+Recommended Action:
+{recommendation}
+
+Your task: Summarize what the pattern means to the patient and why the recommended action is helpful. Do NOT suggest any medication reviews or changes.

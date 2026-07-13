@@ -1,0 +1,13 @@
+Please write a warm, encouraging weekly summary for the patient.
+
+Explain how their week went using the metrics provided. Celebrate their successes (like good logging or high Time in Range) and gently explain any areas where they struggled. Keep it to one short paragraph.
+
+Patient's Weekly Data:
+Time in Range (TIR): {tirPercent}%
+Average Glucose: {avgGlucose} mg/dL
+Glucose Variability: {cvPercent}%
+Medication Adherence: {adherenceRate}%
+Average Daily Steps: {avgSteps}
+Key Insights Detected: {topInsights}
+
+Your task: Tell the patient the story of their week. Help them connect their habits to their numbers. Do not prescribe or give medical advice.
