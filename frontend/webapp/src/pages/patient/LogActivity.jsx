@@ -17,6 +17,10 @@ export default function LogActivity() {
   const [loading, setLoading] = useState(true);
   const [today, setToday] = useState([]);
 
+  const [fitbit, setFitbit] = useState({ connected: false, loading: true });
+  const [fitbitBusy, setFitbitBusy] = useState(false);
+  const [fitbitMsg, setFitbitMsg] = useState({ tone: "error", text: "" });
+
   function loadSide() {
     setLoading(true);
     api("GET", "/activities")
@@ -27,7 +31,72 @@ export default function LogActivity() {
       .finally(() => setLoading(false));
   }
 
+  function loadFitbitStatus() {
+    setFitbit((f) => ({ ...f, loading: true }));
+    api("GET", "/fitbit/status")
+      .then((d) => setFitbit({ connected: !!d.connected, connected_at: d.connected_at, loading: false }))
+      .catch(() => setFitbit({ connected: false, loading: false }));
+  }
+
   useEffect(loadSide, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code) {
+      window.history.replaceState({}, "", window.location.pathname);
+      setFitbitBusy(true);
+      api("POST", "/fitbit/callback", { code })
+        .then(() => {
+          setFitbitMsg({ tone: "success", text: "✓ Fitbit connected!" });
+          loadFitbitStatus();
+        })
+        .catch((err) => setFitbitMsg({ tone: "error", text: err.message }))
+        .finally(() => setFitbitBusy(false));
+    } else {
+      loadFitbitStatus();
+    }
+  }, []);
+
+  async function connectFitbit() {
+    setFitbitBusy(true);
+    setFitbitMsg({ tone: "error", text: "" });
+    try {
+      const { auth_url } = await api("GET", "/fitbit/auth-url");
+      window.location.href = auth_url;
+    } catch (err) {
+      setFitbitMsg({ tone: "error", text: err.message });
+      setFitbitBusy(false);
+    }
+  }
+
+  async function syncFitbit() {
+    setFitbitBusy(true);
+    setFitbitMsg({ tone: "error", text: "" });
+    try {
+      await api("POST", "/fitbit/sync");
+      setFitbitMsg({ tone: "success", text: "✓ Synced with Fitbit!" });
+      loadSide();
+    } catch (err) {
+      setFitbitMsg({ tone: "error", text: err.message });
+    } finally {
+      setFitbitBusy(false);
+    }
+  }
+
+  async function disconnectFitbit() {
+    setFitbitBusy(true);
+    setFitbitMsg({ tone: "error", text: "" });
+    try {
+      await api("DELETE", "/fitbit/disconnect");
+      setFitbitMsg({ tone: "success", text: "Fitbit disconnected." });
+      loadFitbitStatus();
+    } catch (err) {
+      setFitbitMsg({ tone: "error", text: err.message });
+    } finally {
+      setFitbitBusy(false);
+    }
+  }
 
   async function save(e) {
     e.preventDefault();
@@ -55,6 +124,34 @@ export default function LogActivity() {
   return (
     <div>
       <PageHeader title="Log activity" subtitle="Track your physical activity." />
+
+      <Card title="Fitbit" className="mb-6">
+        <Alert tone={fitbitMsg.tone}>{fitbitMsg.text}</Alert>
+        {fitbit.loading ? (
+          <Loader />
+        ) : (
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="text-sm text-t2">
+              {fitbit.connected ? (
+                <>🟢 Connected — steps and heart rate sync automatically.</>
+              ) : (
+                <>Connect your Fitbit to auto-log steps, active minutes and heart rate.</>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {fitbit.connected ? (
+                <>
+                  <Button variant="secondary" size="sm" disabled={fitbitBusy} onClick={syncFitbit}>Sync now</Button>
+                  <Button variant="danger" size="sm" disabled={fitbitBusy} onClick={disconnectFitbit}>Disconnect</Button>
+                </>
+              ) : (
+                <Button size="sm" disabled={fitbitBusy} onClick={connectFitbit}>Connect Fitbit</Button>
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
+
       <div className="flex gap-6 items-start flex-wrap">
         <Card className="max-w-[480px] w-full">
           <form onSubmit={save}>
