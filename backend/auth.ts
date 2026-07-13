@@ -7,6 +7,7 @@ import { Role } from '@prisma/client';
 import { IsNotEmpty, IsPhoneNumber, IsString, IsEmail, IsOptional } from 'class-validator';
 import { AuthGuard, PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Twilio } from 'twilio';
 
 export class SendOtpDto {
   @ApiProperty({ example: '+919876543210', description: 'Phone number with country code' })
@@ -57,10 +58,18 @@ export class RegisterDoctorDto {
 
 @Injectable()
 export class AuthService {
+  private readonly twilioClient: Twilio | null;
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) {}
+  ) {
+    const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN } = process.env;
+    this.twilioClient =
+      TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN
+        ? new Twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        : null;
+  }
 
   async sendOtp(dto: SendOtpDto) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -77,7 +86,15 @@ export class AuthService {
       },
     });
 
-    console.log(`[DEV ONLY] OTP for ${dto.phone} is ${otp}`);
+    if (this.twilioClient && process.env.TWILIO_PHONE_NUMBER) {
+      await this.twilioClient.messages.create({
+        body: `Your GlucoConnect verification code is ${otp}. It expires in 10 minutes.`,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: dto.phone,
+      });
+    } else {
+      console.log(`[DEV ONLY] OTP for ${dto.phone} is ${otp}`);
+    }
 
     return { message: 'OTP sent successfully' };
   }
