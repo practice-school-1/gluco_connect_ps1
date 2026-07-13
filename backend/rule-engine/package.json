@@ -5,7 +5,7 @@
   "type": "module",
   "main": "services/recommendationService.js",
  "scripts": {
-  "test": "node --test tests/recommendation.test.js",
+  "test": "node --test test/recommendation.test.js",
   "validate": "node validate.js",
   "simulate": "node validate.js"
 },

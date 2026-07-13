@@ -60,7 +60,7 @@
     "description": "Meal likely has high glycemic impact based on content analysis.",
     "severity": "medium",
     "clinicalAction": "Review meal composition and portion size.",
-    "patientMessageTemplate": "Your recent meal may have contributed significantly to your glucose increase.",
+    "patientMessageTemplate": "Your recent meal may have contributed significantly to your glucose increase. Try swapping some rice for extra sabzi (vegetables) next time to lower the glycemic load.",
     "enabled": true
   },
   {
