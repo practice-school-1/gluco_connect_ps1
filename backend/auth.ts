@@ -86,7 +86,15 @@ export class AuthService {
       },
     });
 
-    if (this.twilioClient && process.env.TWILIO_PHONE_NUMBER) {
+    if (process.env.TWO_FACTOR_API_KEY) {
+      const phoneDigits = dto.phone.replace(/^\+/, '');
+      const url = `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/${phoneDigits}/${otp}/OTP1`;
+      const response = await fetch(url);
+      const result = await response.json();
+      if (result.Status !== 'Success') {
+        console.error(`[2Factor] OTP send failed for ${dto.phone}:`, result.Details);
+      }
+    } else if (this.twilioClient && process.env.TWILIO_PHONE_NUMBER) {
       await this.twilioClient.messages.create({
         body: `Your GlucoConnect verification code is ${otp}. It expires in 10 minutes.`,
         from: process.env.TWILIO_PHONE_NUMBER,
