@@ -239,6 +239,148 @@ describe('InsightsService', () => {
     });
   });
 
+  // ─── getOnDemand ──────────────────────────────────────────────────────────
+
+  describe('getOnDemand', () => {
+    it('throws NotFoundException when patient is not found', async () => {
+      mockPrisma.patient.findUnique.mockResolvedValue(null);
+
+      await expect(service.getOnDemand('u1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('always generates fresh, never reads the daily cache', async () => {
+      mockPrisma.patient.findUnique.mockResolvedValue(PATIENT);
+      mockPrisma.glucoseReading.findMany.mockResolvedValue([
+        { value_mg_dl: 110, recorded_at: new Date() },
+      ]);
+      mockPrisma.insight.create.mockResolvedValue(buildInsight({ type: 'on_demand' }));
+
+      await service.getOnDemand('u1');
+
+      expect(mockPrisma.insight.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.glucoseReading.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { patient_id: 'p1' }, take: 3 }),
+      );
+    });
+
+    it('defaults to the last 3 readings and clamps an out-of-range count to 1-5', async () => {
+      mockPrisma.patient.findUnique.mockResolvedValue(PATIENT);
+      mockPrisma.glucoseReading.findMany.mockResolvedValue([]);
+      mockPrisma.insight.create.mockResolvedValue(buildInsight({ type: 'on_demand' }));
+
+      await service.getOnDemand('u1', 99);
+
+      expect(mockPrisma.glucoseReading.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 5 }),
+      );
+    });
+
+    it('reports no readings when none exist yet', async () => {
+      mockPrisma.patient.findUnique.mockResolvedValue(PATIENT);
+      mockPrisma.glucoseReading.findMany.mockResolvedValue([]);
+      mockPrisma.insight.create.mockResolvedValue(buildInsight({ type: 'on_demand', flag: 'info' }));
+
+      await service.getOnDemand('u1');
+
+      const createCall = mockPrisma.insight.create.mock.calls[0][0].data;
+      expect(createCall.flag).toBe('info');
+      expect(createCall.message).toContain('No glucose readings logged yet');
+    });
+
+    it('flags a hypo reading among the recent set as danger', async () => {
+      mockPrisma.patient.findUnique.mockResolvedValue(PATIENT);
+      mockPrisma.glucoseReading.findMany.mockResolvedValue([
+        { value_mg_dl: 65, recorded_at: new Date() },
+        { value_mg_dl: 110, recorded_at: new Date() },
+      ]);
+      mockPrisma.insight.create.mockResolvedValue(buildInsight({ type: 'on_demand', flag: 'danger' }));
+
+      await service.getOnDemand('u1');
+
+      const createCall = mockPrisma.insight.create.mock.calls[0][0].data;
+      expect(createCall.flag).toBe('danger');
+      expect(createCall.message).toContain('hypoglycemia');
+    });
+
+    it('prioritizes the most recent reading — a fine latest reading overrides an earlier hypo one', async () => {
+      mockPrisma.patient.findUnique.mockResolvedValue(PATIENT);
+      mockPrisma.glucoseReading.findMany.mockResolvedValue([
+        { value_mg_dl: 110, recorded_at: new Date() }, // latest — fine
+        { value_mg_dl: 65, recorded_at: new Date() },  // earlier — was hypo
+      ]);
+      mockPrisma.insight.create.mockResolvedValue(buildInsight({ type: 'on_demand', flag: 'warning' }));
+
+      await service.getOnDemand('u1');
+
+      const createCall = mockPrisma.insight.create.mock.calls[0][0].data;
+      expect(createCall.flag).toBe('warning');
+      expect(createCall.message).toContain('Your most recent reading was 110 mg/dL, which is fine');
+      expect(createCall.message).toContain('dipped to 65 mg/dL');
+    });
+
+    it('detects a rising trend across the recent readings', async () => {
+      mockPrisma.patient.findUnique.mockResolvedValue(PATIENT);
+      // newest-first, as glucoseReading.findMany returns them
+      mockPrisma.glucoseReading.findMany.mockResolvedValue([
+        { value_mg_dl: 150, recorded_at: new Date() },
+        { value_mg_dl: 100, recorded_at: new Date() },
+      ]);
+      mockPrisma.insight.create.mockResolvedValue(buildInsight({ type: 'on_demand', flag: 'warning' }));
+
+      await service.getOnDemand('u1');
+
+      const createCall = mockPrisma.insight.create.mock.calls[0][0].data;
+      expect(createCall.flag).toBe('warning');
+      expect(createCall.message).toContain('rising trend');
+    });
+
+    it('saves the insight with type on_demand', async () => {
+      mockPrisma.patient.findUnique.mockResolvedValue(PATIENT);
+      mockPrisma.glucoseReading.findMany.mockResolvedValue([
+        { value_mg_dl: 100, recorded_at: new Date() },
+      ]);
+      mockPrisma.insight.create.mockResolvedValue(buildInsight({ type: 'on_demand' }));
+
+      await service.getOnDemand('u1');
+
+      expect(mockPrisma.insight.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ patient_id: 'p1', type: 'on_demand' }) }),
+      );
+    });
+
+    it('routes through the Groq rewrite at the raised temperature when a key is configured', async () => {
+      const originalFetch = global.fetch;
+      const originalKey = process.env.GROQ_API_KEY;
+      process.env.GROQ_API_KEY = 'test-key';
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: 'Friendlier on-demand message.' } }] }),
+      });
+
+      try {
+        mockPrisma.patient.findUnique.mockResolvedValue(PATIENT);
+        mockPrisma.glucoseReading.findMany.mockResolvedValue([
+          { value_mg_dl: 100, recorded_at: new Date() },
+        ]);
+        mockPrisma.insight.create.mockResolvedValue(buildInsight({ type: 'on_demand' }));
+
+        await service.getOnDemand('u1');
+
+        const [, options] = (global.fetch as jest.Mock).mock.calls[0];
+        const body = JSON.parse(options.body);
+        expect(body.temperature).toBe(0.8);
+
+        const createCall = mockPrisma.insight.create.mock.calls[0][0].data;
+        expect(createCall.generated_by).toBe('groq');
+        expect(createCall.message).toBe('Friendlier on-demand message.');
+      } finally {
+        global.fetch = originalFetch;
+        if (originalKey === undefined) delete process.env.GROQ_API_KEY;
+        else process.env.GROQ_API_KEY = originalKey;
+      }
+    });
+  });
+
   // ─── Groq rewrite ─────────────────────────────────────────────────────────
 
   describe('Groq patient-friendly rewrite', () => {
@@ -293,6 +435,23 @@ describe('InsightsService', () => {
       const createCall = mockPrisma.insight.create.mock.calls[0][0].data;
       expect(createCall.generated_by).toBe('groq');
       expect(createCall.message).toBe('Friendlier low-sugar message.');
+    });
+
+    it('sends the raised temperature (0.8) to Groq for more varied phrasing', async () => {
+      process.env.GROQ_API_KEY = 'test-key';
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: 'Friendlier low-sugar message.' } }],
+        }),
+      });
+      setupDailyInsight();
+
+      await service.getDaily('u1');
+
+      const [, options] = (global.fetch as jest.Mock).mock.calls[0];
+      const body = JSON.parse(options.body);
+      expect(body.temperature).toBe(0.8);
     });
 
     it('falls back to the rule-engine message when the Groq call fails', async () => {

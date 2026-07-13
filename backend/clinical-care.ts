@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards, Request, Injectable, NotFoundException, ForbiddenException, Module, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards, Request, Injectable, NotFoundException, ForbiddenException, Module, Delete } from '@nestjs/common';
 import { JwtAuthGuard } from './auth';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 import { PrismaService } from './prisma/prisma.service';
@@ -293,7 +293,7 @@ export class InsightsService {
         body: JSON.stringify({
           model,
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.4,
+          temperature: 0.8,
           max_tokens: 200,
         }),
       });
@@ -358,6 +358,96 @@ export class InsightsService {
 
     return this.prisma.insight.create({
       data: { patient_id: patient.id, type, flag, message, content: message, generated_by: generatedBy },
+    });
+  }
+
+  private buildRecentReadingsMessage(readings: any[]): { flag: string; message: string } {
+    if (readings.length === 0) {
+      return {
+        flag: 'info',
+        message: 'No glucose readings logged yet. Log a reading and check back for a personalized insight.',
+      };
+    }
+
+    // readings arrive newest-first — the most recent one takes priority. Only
+    // fall back to earlier readings (for context or a trend read) once we know
+    // the latest reading isn't itself an extreme that needs calling out first.
+    const [latest, ...earlier] = readings;
+    const chronological = [...readings].reverse();
+    const values = chronological.map(r => r.value_mg_dl);
+    const n = values.length;
+    const span = n === 1 ? 'your last reading' : `your last ${n} readings`;
+
+    if (latest.value_mg_dl < 70) {
+      return {
+        flag: 'danger',
+        message: `Your most recent reading was ${latest.value_mg_dl} mg/dL — below 70 is hypoglycemia territory. Have a small snack like a banana or a glass of juice, and contact your doctor if it happens again.`,
+      };
+    }
+    if (latest.value_mg_dl > 300) {
+      return {
+        flag: 'danger',
+        message: `Your most recent reading was ${latest.value_mg_dl} mg/dL — that's very high. Please contact your doctor as soon as possible and avoid high-carb foods today.`,
+      };
+    }
+
+    const earlierLow = earlier.find(r => r.value_mg_dl < 70);
+    const earlierVeryHigh = earlier.find(r => r.value_mg_dl > 300);
+
+    if (earlierLow) {
+      return {
+        flag: 'warning',
+        message: `Your most recent reading was ${latest.value_mg_dl} mg/dL, which is fine, but an earlier one in ${span} (${values.join(', ')} mg/dL) dipped to ${earlierLow.value_mg_dl} mg/dL — below 70 is hypoglycemia territory. Keep a snack handy in case it happens again.`,
+      };
+    }
+    if (earlierVeryHigh) {
+      return {
+        flag: 'warning',
+        message: `Your most recent reading was ${latest.value_mg_dl} mg/dL, which is fine, but an earlier one in ${span} (${values.join(', ')} mg/dL) spiked to ${earlierVeryHigh.value_mg_dl} mg/dL. Keep an eye on your next few readings.`,
+      };
+    }
+
+    const avg = Math.round(values.reduce((a, b) => a + b, 0) / n);
+
+    if (n >= 2) {
+      const delta = values[n - 1] - values[0];
+      if (delta >= 20) {
+        return {
+          flag: 'warning',
+          message: `${span} (${values.join(', ')} mg/dL) show a rising trend, up ${delta} mg/dL. Keep an eye on your next reading and go easy on carbs for now.`,
+        };
+      }
+      if (delta <= -20) {
+        return {
+          flag: 'info',
+          message: `${span} (${values.join(', ')} mg/dL) show a falling trend, down ${Math.abs(delta)} mg/dL. This is usually fine, but keep an eye on it if you feel low.`,
+        };
+      }
+    }
+
+    const inRange = values.every(v => v >= 70 && v <= 140);
+    return {
+      flag: inRange ? 'normal' : 'info',
+      message: `${span} (${values.join(', ')} mg/dL) average ${avg} mg/dL and look ${inRange ? 'steady and in the healthy range (70–140 mg/dL)' : 'fairly steady'}. Keep up your current routine.`,
+    };
+  }
+
+  async getOnDemand(userId: string, count = 3) {
+    const patient = await this.prisma.patient.findUnique({ where: { user_id: userId } });
+    if (!patient) throw new NotFoundException('Patient not found');
+
+    const take = Math.min(Math.max(count || 3, 1), 5);
+    const readings = await this.prisma.glucoseReading.findMany({
+      where: { patient_id: patient.id },
+      orderBy: { recorded_at: 'desc' },
+      take,
+    });
+
+    const { flag, message: ruleMessage } = this.buildRecentReadingsMessage(readings);
+    const { message, generatedBy } = await this.toPatientFriendly(ruleMessage);
+
+    return this.prisma.insight.create({
+      data: { patient_id: patient.id, type: 'on_demand', flag, message, content: message, generated_by: generatedBy },
     });
   }
 
@@ -750,6 +840,12 @@ export class InsightsController {
   @ApiOperation({ summary: "Get today's personalized nudge (generated from rule engine)" })
   getDaily(@Request() req) {
     return this.insightsService.getDaily(req.user.userId);
+  }
+
+  @Post('on-demand')
+  @ApiOperation({ summary: 'Generate a fresh insight from your most recent glucose readings (1-5, default 3)' })
+  getOnDemand(@Request() req, @Query('count') count?: string) {
+    return this.insightsService.getOnDemand(req.user.userId, count ? parseInt(count, 10) : undefined);
   }
 
   @Get('weekly')

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../../lib/api";
 import { PageHeader } from "../../components/Shell";
-import { Badge, Card, Empty, Loader, fmtDateTime } from "../../components/ui";
+import { Alert, Badge, Button, Card, Empty, Loader, fmtDateTime } from "../../components/ui";
 
 const FLAG_LABEL = { normal: "✓ Good", warning: "↑ Notice", danger: "⚠ Attention", info: "ℹ Info" };
 const FLAG_CLASS = {
@@ -15,6 +15,8 @@ export default function Insights() {
   const [loading, setLoading] = useState(true);
   const [insights, setInsights] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -25,11 +27,28 @@ export default function Insights() {
     });
   }, []);
 
+  function giveInsight() {
+    setGenerating(true);
+    setGenError("");
+    api("POST", "/insights/on-demand")
+      .then((insight) => setInsights((prev) => [insight, ...prev]))
+      .catch((err) => setGenError(err.message))
+      .finally(() => setGenerating(false));
+  }
+
   if (loading) return <Loader />;
 
   return (
     <div>
       <PageHeader title="Insights" subtitle="AI-powered health nudges based on your data." />
+
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="text-xs text-t3">Get a fresh read on your last few glucose readings, any time.</div>
+        <Button size="sm" disabled={generating} onClick={giveInsight}>
+          {generating ? "Thinking…" : "Give insight"}
+        </Button>
+      </div>
+      <Alert tone="error">{genError}</Alert>
 
       {insights.length === 0 ? (
         <Card className="mb-5">
