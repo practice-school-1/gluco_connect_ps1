@@ -17,9 +17,9 @@ export default function LogActivity() {
   const [loading, setLoading] = useState(true);
   const [today, setToday] = useState([]);
 
-  const [fitbit, setFitbit] = useState({ connected: false, loading: true });
-  const [fitbitBusy, setFitbitBusy] = useState(false);
-  const [fitbitMsg, setFitbitMsg] = useState({ tone: "error", text: "" });
+  const [googleHealth, setGoogleHealth] = useState({ connected: false, loading: true });
+  const [googleHealthBusy, setGoogleHealthBusy] = useState(false);
+  const [googleHealthMsg, setGoogleHealthMsg] = useState({ tone: "error", text: "" });
 
   function loadSide() {
     setLoading(true);
@@ -31,11 +31,11 @@ export default function LogActivity() {
       .finally(() => setLoading(false));
   }
 
-  function loadFitbitStatus() {
-    setFitbit((f) => ({ ...f, loading: true }));
-    api("GET", "/fitbit/status")
-      .then((d) => setFitbit({ connected: !!d.connected, connected_at: d.connected_at, loading: false }))
-      .catch(() => setFitbit({ connected: false, loading: false }));
+  function loadGoogleHealthStatus() {
+    setGoogleHealth((f) => ({ ...f, loading: true }));
+    api("GET", "/google-health/status")
+      .then((d) => setGoogleHealth({ connected: !!d.connected, connected_at: d.connected_at, loading: false }))
+      .catch(() => setGoogleHealth({ connected: false, loading: false }));
   }
 
   useEffect(loadSide, []);
@@ -45,56 +45,56 @@ export default function LogActivity() {
     const code = params.get("code");
     if (code) {
       window.history.replaceState({}, "", window.location.pathname);
-      setFitbitBusy(true);
-      api("POST", "/fitbit/callback", { code })
+      setGoogleHealthBusy(true);
+      api("POST", "/google-health/callback", { code })
         .then(() => {
-          setFitbitMsg({ tone: "success", text: "✓ Fitbit connected!" });
-          loadFitbitStatus();
+          setGoogleHealthMsg({ tone: "success", text: "✓ Google Health connected!" });
+          loadGoogleHealthStatus();
         })
-        .catch((err) => setFitbitMsg({ tone: "error", text: err.message }))
-        .finally(() => setFitbitBusy(false));
+        .catch((err) => setGoogleHealthMsg({ tone: "error", text: err.message }))
+        .finally(() => setGoogleHealthBusy(false));
     } else {
-      loadFitbitStatus();
+      loadGoogleHealthStatus();
     }
   }, []);
 
-  async function connectFitbit() {
-    setFitbitBusy(true);
-    setFitbitMsg({ tone: "error", text: "" });
+  async function connectGoogleHealth() {
+    setGoogleHealthBusy(true);
+    setGoogleHealthMsg({ tone: "error", text: "" });
     try {
-      const { auth_url } = await api("GET", "/fitbit/auth-url");
+      const { auth_url } = await api("GET", "/google-health/auth-url");
       window.location.href = auth_url;
     } catch (err) {
-      setFitbitMsg({ tone: "error", text: err.message });
-      setFitbitBusy(false);
+      setGoogleHealthMsg({ tone: "error", text: err.message });
+      setGoogleHealthBusy(false);
     }
   }
 
-  async function syncFitbit() {
-    setFitbitBusy(true);
-    setFitbitMsg({ tone: "error", text: "" });
+  async function syncGoogleHealth() {
+    setGoogleHealthBusy(true);
+    setGoogleHealthMsg({ tone: "error", text: "" });
     try {
-      await api("POST", "/fitbit/sync");
-      setFitbitMsg({ tone: "success", text: "✓ Synced with Fitbit!" });
+      await api("POST", "/google-health/sync");
+      setGoogleHealthMsg({ tone: "success", text: "✓ Synced with Google Health!" });
       loadSide();
     } catch (err) {
-      setFitbitMsg({ tone: "error", text: err.message });
+      setGoogleHealthMsg({ tone: "error", text: err.message });
     } finally {
-      setFitbitBusy(false);
+      setGoogleHealthBusy(false);
     }
   }
 
-  async function disconnectFitbit() {
-    setFitbitBusy(true);
-    setFitbitMsg({ tone: "error", text: "" });
+  async function disconnectGoogleHealth() {
+    setGoogleHealthBusy(true);
+    setGoogleHealthMsg({ tone: "error", text: "" });
     try {
-      await api("DELETE", "/fitbit/disconnect");
-      setFitbitMsg({ tone: "success", text: "Fitbit disconnected." });
-      loadFitbitStatus();
+      await api("DELETE", "/google-health/disconnect");
+      setGoogleHealthMsg({ tone: "success", text: "Google Health disconnected." });
+      loadGoogleHealthStatus();
     } catch (err) {
-      setFitbitMsg({ tone: "error", text: err.message });
+      setGoogleHealthMsg({ tone: "error", text: err.message });
     } finally {
-      setFitbitBusy(false);
+      setGoogleHealthBusy(false);
     }
   }
 
@@ -125,27 +125,30 @@ export default function LogActivity() {
     <div>
       <PageHeader title="Log activity" subtitle="Track your physical activity." />
 
-      <Card title="Fitbit" className="mb-6">
-        <Alert tone={fitbitMsg.tone}>{fitbitMsg.text}</Alert>
-        {fitbit.loading ? (
+      <Card title="Google Health" className="mb-6">
+        <Alert tone={googleHealthMsg.tone}>{googleHealthMsg.text}</Alert>
+        {googleHealth.loading ? (
           <Loader />
         ) : (
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="text-sm text-t2">
-              {fitbit.connected ? (
+              {googleHealth.connected ? (
                 <>🟢 Connected — steps and heart rate sync automatically.</>
               ) : (
-                <>Connect your Fitbit to auto-log steps, active minutes and heart rate.</>
+                <>
+                  Connect Google Health to auto-log steps, active minutes and heart rate from Fitbit, Pixel Watch and other connected apps.
+                  <div className="text-xs text-t3 mt-1">Requires a Fitbit account or Health Connect device already linked to this Google account.</div>
+                </>
               )}
             </div>
             <div className="flex gap-2">
-              {fitbit.connected ? (
+              {googleHealth.connected ? (
                 <>
-                  <Button variant="secondary" size="sm" disabled={fitbitBusy} onClick={syncFitbit}>Sync now</Button>
-                  <Button variant="danger" size="sm" disabled={fitbitBusy} onClick={disconnectFitbit}>Disconnect</Button>
+                  <Button variant="secondary" size="sm" disabled={googleHealthBusy} onClick={syncGoogleHealth}>Sync now</Button>
+                  <Button variant="danger" size="sm" disabled={googleHealthBusy} onClick={disconnectGoogleHealth}>Disconnect</Button>
                 </>
               ) : (
-                <Button size="sm" disabled={fitbitBusy} onClick={connectFitbit}>Connect Fitbit</Button>
+                <Button size="sm" disabled={googleHealthBusy} onClick={connectGoogleHealth}>Connect Google Health</Button>
               )}
             </div>
           </div>

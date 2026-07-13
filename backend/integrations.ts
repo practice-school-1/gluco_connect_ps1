@@ -4,7 +4,7 @@ import { Controller, Get, Post, Delete, Body, Query, UseGuards, Request, Injecta
 import { JwtAuthGuard } from './auth';
 import { PrismaService } from './prisma/prisma.service';
 
-export class FitbitCallbackDto {
+export class GoogleHealthCallbackDto {
   @ApiProperty({ example: 'oauth_auth_code_123' })
   @IsNotEmpty()
   @IsString()
@@ -45,59 +45,77 @@ export class UpdatePreferencesDto {
   doctor_messages?: boolean;
 }
 
-const FITBIT_SCOPE = 'activity heartrate profile';
+// Google Health API — successor to the Fitbit Web API (legacy Fitbit API
+// shuts down September 2026). OAuth goes through Google's own consent
+// screen, not fitbit.com. See backend/.env.example for the scopes/setup.
+const GOOGLE_HEALTH_SCOPES = [
+  'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly',
+  'https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly',
+].join(' ');
 
 @Injectable()
-export class FitbitService {
+export class GoogleHealthService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getAuthUrl(userId: string) {
     const params = new URLSearchParams({
-      client_id: process.env.FITBIT_CLIENT_ID ?? '',
+      client_id: process.env.GOOGLE_HEALTH_CLIENT_ID ?? '',
       response_type: 'code',
-      scope: FITBIT_SCOPE,
-      redirect_uri: process.env.FITBIT_REDIRECT_URI ?? '',
+      access_type: 'offline',
+      prompt: 'consent',
+      scope: GOOGLE_HEALTH_SCOPES,
+      redirect_uri: process.env.GOOGLE_HEALTH_REDIRECT_URI ?? '',
     });
-    return { auth_url: `https://www.fitbit.com/oauth2/authorize?${params.toString()}` };
+    return { auth_url: `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}` };
   }
 
-  private async exchangeToken(body: URLSearchParams) {
-    const basicAuth = Buffer.from(
-      `${process.env.FITBIT_CLIENT_ID}:${process.env.FITBIT_CLIENT_SECRET}`,
-    ).toString('base64');
-
-    const response = await fetch('https://api.fitbit.com/oauth2/token', {
+  private async exchangeToken(extra: Record<string, string>) {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
-      headers: {
-        Authorization: `Basic ${basicAuth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: body.toString(),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_HEALTH_CLIENT_ID ?? '',
+        client_secret: process.env.GOOGLE_HEALTH_CLIENT_SECRET ?? '',
+        ...extra,
+      }).toString(),
     });
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(`Fitbit token request failed: ${JSON.stringify(data)}`);
+      if (data?.error === 'invalid_grant') {
+        throw new Error('That connection expired or was already used — please reconnect Google Health.');
+      }
+      throw new Error(data?.error_description || data?.error || `Google Health token request failed: ${JSON.stringify(data)}`);
     }
-    return data as { access_token: string; refresh_token: string; scope: string };
+    return data as { access_token: string; refresh_token?: string; scope: string };
   }
 
-  async handleCallback(userId: string, dto: FitbitCallbackDto) {
+  private async googleErrorMessage(res: Response, fallback: string) {
+    const body: any = await res.json().catch(() => null);
+    const reason = body?.error?.details?.find((d: any) => d.reason)?.reason;
+    if (reason === 'ACCOUNT_NOT_LINKED') {
+      return "This Google account isn't linked to a fitness data source yet. Link a Fitbit account or a Health Connect-synced device at https://fitbit.google.com/auth/signup, then sync again.";
+    }
+    if (res.status === 401 || res.status === 403) {
+      return 'Your Google Health connection has expired or lost access. Disconnect and reconnect Google Health, then try again.';
+    }
+    return body?.error?.message || fallback;
+  }
+
+  async handleCallback(userId: string, dto: GoogleHealthCallbackDto) {
     const patient = await this.prisma.patient.findUnique({ where: { user_id: userId } });
     if (!patient) throw new NotFoundException('Patient not found');
 
-    const tokens = await this.exchangeToken(
-      new URLSearchParams({
-        grant_type: 'authorization_code',
-        code: dto.code,
-        redirect_uri: process.env.FITBIT_REDIRECT_URI ?? '',
-      }),
-    );
+    const tokens = await this.exchangeToken({
+      grant_type: 'authorization_code',
+      code: dto.code,
+      redirect_uri: process.env.GOOGLE_HEALTH_REDIRECT_URI ?? '',
+    });
 
     await this.prisma.patientIntegration.upsert({
-      where: { patient_id_provider_name: { patient_id: patient.id, provider_name: 'fitbit' } },
+      where: { patient_id_provider_name: { patient_id: patient.id, provider_name: 'google_health' } },
       create: {
         patient_id: patient.id,
-        provider_name: 'fitbit',
+        provider_name: 'google_health',
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
         scopes: tokens.scope,
@@ -109,13 +127,12 @@ export class FitbitService {
       },
     });
 
-    return { message: 'Fitbit connected successfully' };
+    return { message: 'Google Health connected successfully' };
   }
 
-  private async fitbitGet(accessToken: string, path: string) {
-    return fetch(`https://api.fitbit.com${path}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+  private async dataPointsGet(accessToken: string, dataType: string, filter: string) {
+    const url = `https://health.googleapis.com/v4/users/me/dataTypes/${dataType}/dataPoints?filter=${encodeURIComponent(filter)}`;
+    return fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   }
 
   async sync(userId: string) {
@@ -123,46 +140,65 @@ export class FitbitService {
     if (!patient) throw new NotFoundException('Patient not found');
 
     const integration = await this.prisma.patientIntegration.findFirst({
-      where: { patient_id: patient.id, provider_name: 'fitbit' },
+      where: { patient_id: patient.id, provider_name: 'google_health' },
     });
-    if (!integration) throw new NotFoundException('Fitbit is not connected');
+    if (!integration) throw new NotFoundException('Google Health is not connected');
 
     let accessToken = integration.access_token;
-    const today = new Date().toISOString().slice(0, 10);
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(); endOfDay.setHours(23, 59, 59, 999);
+    const today = startOfDay.toISOString().slice(0, 10);
+    const startIso = startOfDay.toISOString();
+    const endIso = endOfDay.toISOString();
 
-    let activityRes = await this.fitbitGet(accessToken, `/1/user/-/activities/date/${today}.json`);
+    const fetchAll = async () => Promise.all([
+      this.dataPointsGet(accessToken, 'steps', `steps.interval.start_time >= "${startIso}" AND steps.interval.start_time < "${endIso}"`),
+      this.dataPointsGet(accessToken, 'active_minutes', `active_minutes.interval.start_time >= "${startIso}" AND active_minutes.interval.start_time < "${endIso}"`),
+      this.dataPointsGet(accessToken, 'total_calories', `total_calories.interval.start_time >= "${startIso}" AND total_calories.interval.start_time < "${endIso}"`),
+      this.dataPointsGet(accessToken, 'heart_rate', `heart_rate.sample_time.physical_time >= "${startIso}" AND heart_rate.sample_time.physical_time < "${endIso}"`),
+    ]);
 
-    if (activityRes.status === 401) {
-      const refreshed = await this.exchangeToken(
-        new URLSearchParams({
-          grant_type: 'refresh_token',
-          refresh_token: integration.refresh_token ?? '',
-        }),
-      );
+    let [stepsRes, activeMinRes, caloriesRes, heartRes] = await fetchAll();
+
+    if (stepsRes.status === 401) {
+      const refreshed = await this.exchangeToken({
+        grant_type: 'refresh_token',
+        refresh_token: integration.refresh_token ?? '',
+      });
       accessToken = refreshed.access_token;
       await this.prisma.patientIntegration.update({
         where: { id: integration.id },
-        data: { access_token: refreshed.access_token, refresh_token: refreshed.refresh_token },
+        data: { access_token: refreshed.access_token, refresh_token: refreshed.refresh_token ?? integration.refresh_token },
       });
-      activityRes = await this.fitbitGet(accessToken, `/1/user/-/activities/date/${today}.json`);
+      [stepsRes, activeMinRes, caloriesRes, heartRes] = await fetchAll();
     }
 
-    if (!activityRes.ok) {
-      throw new Error(`Fitbit activity request failed: ${activityRes.status}`);
+    if (!stepsRes.ok) {
+      throw new Error(await this.googleErrorMessage(stepsRes, `Google Health steps request failed: ${stepsRes.status}`));
     }
-    const activityData = await activityRes.json();
-    const summary = activityData.summary ?? {};
 
-    const heartRes = await this.fitbitGet(accessToken, `/1/user/-/activities/heart/date/${today}/1d.json`);
-    const heartData = heartRes.ok ? await heartRes.json() : null;
-    const heartRateAvg = heartData?.['activities-heart']?.[0]?.value?.restingHeartRate ?? null;
+    // Each dataPoint nests its value under a key matching the data type
+    // name (e.g. `steps.count`, `heart_rate.beatsPerMinute`) — see
+    // https://developers.google.com/health/reference/rest/v4/users.dataTypes.dataPoints
+    const sumField = (points: any[], typeKey: string, field: string) =>
+      points.reduce((sum, p) => sum + (parseInt(p?.[typeKey]?.[field], 10) || 0), 0);
+    const avgField = (points: any[], typeKey: string, field: string) => {
+      const vals = points.map((p) => parseInt(p?.[typeKey]?.[field], 10)).filter((v) => !isNaN(v));
+      return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+    };
 
-    const steps = summary.steps ?? 0;
-    const activeMinutes = (summary.veryActiveMinutes ?? 0) + (summary.fairlyActiveMinutes ?? 0);
-    const caloriesBurned = summary.caloriesOut ?? null;
+    const stepsData = (await stepsRes.json())?.dataPoints ?? [];
+    const activeMinData = activeMinRes.ok ? (await activeMinRes.json())?.dataPoints ?? [] : [];
+    const caloriesData = caloriesRes.ok ? (await caloriesRes.json())?.dataPoints ?? [] : [];
+    const heartData = heartRes.ok ? (await heartRes.json())?.dataPoints ?? [] : [];
+
+    const steps = sumField(stepsData, 'steps', 'count');
+    const activeMinutes = sumField(activeMinData, 'active_minutes', 'count');
+    const caloriesBurned = sumField(caloriesData, 'total_calories', 'count') || null;
+    const heartRateAvg = avgField(heartData, 'heart_rate', 'beatsPerMinute');
 
     const existing = await this.prisma.activity.findFirst({
-      where: { patient_id: patient.id, source: 'fitbit', date: new Date(today) },
+      where: { patient_id: patient.id, source: 'google_health', date: new Date(today) },
     });
 
     const activityRecord = existing
@@ -178,8 +214,8 @@ export class FitbitService {
       : await this.prisma.activity.create({
           data: {
             patient_id: patient.id,
-            source: 'fitbit',
-            activity_type: 'fitbit_sync',
+            source: 'google_health',
+            activity_type: 'google_health_sync',
             steps,
             active_minutes: activeMinutes,
             calories_burned: caloriesBurned,
@@ -188,7 +224,7 @@ export class FitbitService {
           },
         });
 
-    return { message: 'Fitbit data synced', activity: activityRecord };
+    return { message: 'Google Health data synced', activity: activityRecord };
   }
 
   async disconnect(userId: string) {
@@ -196,28 +232,21 @@ export class FitbitService {
     if (!patient) throw new NotFoundException('Patient not found');
 
     const integration = await this.prisma.patientIntegration.findFirst({
-      where: { patient_id: patient.id, provider_name: 'fitbit' },
+      where: { patient_id: patient.id, provider_name: 'google_health' },
     });
 
     if (integration) {
-      const basicAuth = Buffer.from(
-        `${process.env.FITBIT_CLIENT_ID}:${process.env.FITBIT_CLIENT_SECRET}`,
-      ).toString('base64');
-      await fetch('https://api.fitbit.com/oauth2/revoke', {
+      await fetch(`https://oauth2.googleapis.com/revoke?token=${integration.access_token}`, {
         method: 'POST',
-        headers: {
-          Authorization: `Basic ${basicAuth}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({ token: integration.access_token }).toString(),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       }).catch(() => {});
     }
 
     await this.prisma.patientIntegration.deleteMany({
-      where: { patient_id: patient.id, provider_name: 'fitbit' }
+      where: { patient_id: patient.id, provider_name: 'google_health' }
     });
 
-    return { message: 'Fitbit disconnected' };
+    return { message: 'Google Health disconnected' };
   }
 
   async getStatus(userId: string) {
@@ -225,7 +254,7 @@ export class FitbitService {
     if (!patient) throw new NotFoundException('Patient not found');
 
     const integration = await this.prisma.patientIntegration.findFirst({
-      where: { patient_id: patient.id, provider_name: 'fitbit' }
+      where: { patient_id: patient.id, provider_name: 'google_health' }
     });
 
     if (integration) {
@@ -266,41 +295,41 @@ export class NotificationsService {
   }
 }
 
-@ApiTags('Fitbit Integration')
+@ApiTags('Google Health Integration')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('fitbit')
-export class FitbitController {
-  constructor(private readonly fitbitService: FitbitService) {}
+@Controller('google-health')
+export class GoogleHealthController {
+  constructor(private readonly googleHealthService: GoogleHealthService) {}
 
   @Get('auth-url')
-  @ApiOperation({ summary: 'Get Fitbit OAuth authorization URL' })
+  @ApiOperation({ summary: 'Get Google Health OAuth authorization URL' })
   getAuthUrl(@Request() req) {
-    return this.fitbitService.getAuthUrl(req.user.userId);
+    return this.googleHealthService.getAuthUrl(req.user.userId);
   }
 
   @Post('callback')
   @ApiOperation({ summary: 'Handle OAuth redirect code' })
-  handleCallback(@Request() req, @Body() dto: FitbitCallbackDto) {
-    return this.fitbitService.handleCallback(req.user.userId, dto);
+  handleCallback(@Request() req, @Body() dto: GoogleHealthCallbackDto) {
+    return this.googleHealthService.handleCallback(req.user.userId, dto);
   }
 
   @Post('sync')
-  @ApiOperation({ summary: 'Manually trigger a Fitbit data sync' })
+  @ApiOperation({ summary: 'Manually trigger a Google Health data sync' })
   sync(@Request() req) {
-    return this.fitbitService.sync(req.user.userId);
+    return this.googleHealthService.sync(req.user.userId);
   }
 
   @Delete('disconnect')
-  @ApiOperation({ summary: 'Remove Fitbit connection' })
+  @ApiOperation({ summary: 'Remove Google Health connection' })
   disconnect(@Request() req) {
-    return this.fitbitService.disconnect(req.user.userId);
+    return this.googleHealthService.disconnect(req.user.userId);
   }
 
   @Get('status')
-  @ApiOperation({ summary: 'Check if Fitbit is connected' })
+  @ApiOperation({ summary: 'Check if Google Health is connected' })
   getStatus(@Request() req) {
-    return this.fitbitService.getStatus(req.user.userId);
+    return this.googleHealthService.getStatus(req.user.userId);
   }
 }
 
@@ -338,11 +367,11 @@ export class NotificationsController {
 
 @Module({
   controllers: [
-    FitbitController,
+    GoogleHealthController,
     NotificationsController
   ],
   providers: [
-    FitbitService,
+    GoogleHealthService,
     NotificationsService
   ]
 })

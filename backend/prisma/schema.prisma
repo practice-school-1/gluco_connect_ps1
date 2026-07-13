@@ -52,6 +52,7 @@ enum ActivitySource {
   fitbit
   apple_health
   google_fit
+  google_health
 }
 
 enum Intensity {
