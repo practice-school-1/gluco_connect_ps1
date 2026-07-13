@@ -271,6 +271,47 @@ const RULES = [
 export class InsightsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async toPatientFriendly(ruleMessage: string): Promise<{ message: string; generatedBy: string }> {
+    if (!process.env.GROQ_API_KEY) {
+      return { message: ruleMessage, generatedBy: 'rule_engine' };
+    }
+
+    try {
+      const model = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
+      const prompt =
+        'Rewrite the following diabetes care message so it sounds warm and easy for a patient to understand. ' +
+        'Keep it to 1-2 short sentences, keep every number and medical fact exactly as given, and do not add any ' +
+        'new medical advice. Reply with only the rewritten message, no preamble.\n\n' +
+        `Message: "${ruleMessage}"`;
+
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.4,
+          max_tokens: 200,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(`Groq request failed: ${JSON.stringify(data)}`);
+      }
+
+      const rewritten = data.choices?.[0]?.message?.content?.trim();
+      if (!rewritten) throw new Error('Groq returned no content');
+
+      return { message: rewritten, generatedBy: 'groq' };
+    } catch (err) {
+      console.error('[Groq] Falling back to rule-engine message:', err);
+      return { message: ruleMessage, generatedBy: 'rule_engine' };
+    }
+  }
+
   private async generateInsight(patient: any): Promise<{ flag: string; message: string; type: string }> {
     const today = new Date(); today.setHours(0,0,0,0);
     const [readings, meals, activities] = await Promise.all([
@@ -312,10 +353,11 @@ export class InsightsService {
     });
     if (cached) return cached;
 
-    const { flag, message, type } = await this.generateInsight(patient);
+    const { flag, message: ruleMessage, type } = await this.generateInsight(patient);
+    const { message, generatedBy } = await this.toPatientFriendly(ruleMessage);
 
     return this.prisma.insight.create({
-      data: { patient_id: patient.id, type, flag, message, content: message, generated_by: 'rule_engine' },
+      data: { patient_id: patient.id, type, flag, message, content: message, generated_by: generatedBy },
     });
   }
 
@@ -342,11 +384,11 @@ export class InsightsService {
     const avgGlucose = vals.length ? Math.round(vals.reduce((a,b) => a+b,0) / vals.length) : null;
     const tir = vals.length ? Math.round((inRange / vals.length) * 100) : 0;
 
-    let message = `This week you logged ${readings.length} glucose readings and ${meals.length} meals. `;
-    if (avgGlucose) message += `Your average glucose was ${avgGlucose} mg/dL with ${tir}% time in range. `;
-    if (tir >= 70) message += 'Excellent control — keep going!';
-    else if (tir >= 50) message += 'Good progress. Try to log more consistently to improve your time in range.';
-    else message += 'There is room to improve. Discuss your meal plan with your doctor at the next visit.';
+    let ruleMessage = `This week you logged ${readings.length} glucose readings and ${meals.length} meals. `;
+    if (avgGlucose) ruleMessage += `Your average glucose was ${avgGlucose} mg/dL with ${tir}% time in range. `;
+    if (tir >= 70) ruleMessage += 'Excellent control — keep going!';
+    else if (tir >= 50) ruleMessage += 'Good progress. Try to log more consistently to improve your time in range.';
+    else ruleMessage += 'There is room to improve. Discuss your meal plan with your doctor at the next visit.';
 
     const cached = await this.prisma.insight.findFirst({
       where: { patient_id: patient.id, type: 'weekly_summary' },
@@ -356,6 +398,8 @@ export class InsightsService {
     const thisWeekMonday = new Date(); thisWeekMonday.setDate(thisWeekMonday.getDate() - thisWeekMonday.getDay() + 1); thisWeekMonday.setHours(0,0,0,0);
     if (cached && cached.created_at >= thisWeekMonday) return cached;
 
+    const { message, generatedBy } = await this.toPatientFriendly(ruleMessage);
+
     return this.prisma.insight.create({
       data: {
         patient_id: patient.id,
@@ -363,7 +407,7 @@ export class InsightsService {
         flag: tir >= 70 ? 'normal' : tir >= 50 ? 'info' : 'warning',
         message,
         content: message,
-        generated_by: 'rule_engine',
+        generated_by: generatedBy,
       },
     });
   }

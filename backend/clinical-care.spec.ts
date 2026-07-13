@@ -3,6 +3,12 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InsightsService, AlertsService } from './clinical-care';
 import { PrismaService } from './prisma/prisma.service';
 
+// PrismaService side-effect-imports 'dotenv/config', which pulls a developer's
+// real .env (and any live GROQ_API_KEY) into process.env for this whole test
+// process. Tests must not depend on that, or they'll silently hit the real
+// Groq API instead of exercising the rule-engine fallback they assert on.
+delete process.env.GROQ_API_KEY;
+
 const mockPrisma = {
   patient: { findUnique: jest.fn(), findMany: jest.fn() },
   doctor: { findUnique: jest.fn() },
@@ -230,6 +236,75 @@ describe('InsightsService', () => {
           }),
         }),
       );
+    });
+  });
+
+  // ─── Groq rewrite ─────────────────────────────────────────────────────────
+
+  describe('Groq patient-friendly rewrite', () => {
+    const originalFetch = global.fetch;
+    const originalEnv = { ...process.env };
+
+    afterEach(() => {
+      global.fetch = originalFetch;
+      process.env = { ...originalEnv };
+    });
+
+    function setupDailyInsight() {
+      mockPrisma.patient.findUnique.mockResolvedValue(PATIENT);
+      mockPrisma.insight.findFirst.mockResolvedValue(null);
+      mockPrisma.glucoseReading.findMany.mockResolvedValue([
+        { value_mg_dl: 65, reading_type: 'random' },
+      ]);
+      mockPrisma.meal.findMany.mockResolvedValue([{ id: 'm1' }]);
+      mockPrisma.activity.findMany.mockResolvedValue([]);
+      mockPrisma.insight.create.mockResolvedValue(buildInsight());
+    }
+
+    it('leaves the rule-engine message untouched when GROQ_API_KEY is unset', async () => {
+      delete process.env.GROQ_API_KEY;
+      global.fetch = jest.fn();
+      setupDailyInsight();
+
+      await service.getDaily('u1');
+
+      expect(global.fetch).not.toHaveBeenCalled();
+      const createCall = mockPrisma.insight.create.mock.calls[0][0].data;
+      expect(createCall.generated_by).toBe('rule_engine');
+      expect(createCall.message).toContain('hypoglycemia');
+    });
+
+    it('uses the Groq rewrite and marks generated_by as groq on success', async () => {
+      process.env.GROQ_API_KEY = 'test-key';
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: 'Friendlier low-sugar message.' } }],
+        }),
+      });
+      setupDailyInsight();
+
+      await service.getDaily('u1');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('api.groq.com'),
+        expect.objectContaining({ method: 'POST' }),
+      );
+      const createCall = mockPrisma.insight.create.mock.calls[0][0].data;
+      expect(createCall.generated_by).toBe('groq');
+      expect(createCall.message).toBe('Friendlier low-sugar message.');
+    });
+
+    it('falls back to the rule-engine message when the Groq call fails', async () => {
+      process.env.GROQ_API_KEY = 'test-key';
+      global.fetch = jest.fn().mockResolvedValue({ ok: false, json: async () => ({ error: 'bad request' }) });
+      setupDailyInsight();
+
+      await service.getDaily('u1');
+
+      const createCall = mockPrisma.insight.create.mock.calls[0][0].data;
+      expect(createCall.generated_by).toBe('rule_engine');
+      expect(createCall.message).toContain('hypoglycemia');
     });
   });
 
