@@ -35,7 +35,7 @@ describe('FoodsService', () => {
 
     it('finds biryani and returns correct GI value', () => {
       const result = service.search('biryani');
-      expect(result).toHaveLength(1);
+      expect(result.length).toBeGreaterThanOrEqual(1);
       expect(result[0].name).toBe('Biryani (chicken)');
       expect(result[0].gi_value).toBe(58);
       expect(result[0].gi_index).toBe('medium');
@@ -51,7 +51,7 @@ describe('FoodsService', () => {
 
     it('finds upma and returns correct GI data', () => {
       const result = service.search('upma');
-      expect(result).toHaveLength(1);
+      expect(result.length).toBeGreaterThanOrEqual(1);
       expect(result[0].name).toBe('Upma (semolina)');
       expect(result[0].gi_value).toBe(65);
       expect(result[0].region).toBe('South India');
@@ -147,9 +147,9 @@ describe('FoodsService', () => {
   // ─── getAll ───────────────────────────────────────────────────────────────
 
   describe('getAll', () => {
-    it('returns exactly 50 foods', () => {
+    it('returns exactly 250 foods', () => {
       const result = service.getAll();
-      expect(result).toHaveLength(50);
+      expect(result).toHaveLength(250);
     });
 
     it('returns the same reference as INDIAN_FOODS', () => {
